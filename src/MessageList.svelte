@@ -6,7 +6,7 @@
   import { crossfade } from "svelte/transition";
   import { toHSL } from "./toHSL.js";
 
-  const dispatch = createEventDispatcher();
+  // const dispatch = createEventDispatcher();
 
   export let chats;
 
@@ -23,34 +23,11 @@
         css: (t) => `
           transform: ${transform} scale(${t});
           opacity: ${t}
-				`,
+  			`,
       };
     },
   });
 </script>
-
-{#each chats as chat (chat.msgId)}
-  <article
-    class:user={chat.user === $user}
-    in:fade
-    out:send={{ key: chat.msgId }}
-  >
-    <div class="meta">
-      <span class="time">
-        {new Date(parseFloat(chat.time)).toLocaleString('en-US', {
-          hour12: false,
-        })}
-      </span>
-      <span class="user">{chat.user}</span>
-    </div>
-    <div
-      class="msg"
-      style="background-color: {chat.user !== $user && toHSL(chat.user)}"
-    >
-      {chat.msg}
-    </div>
-  </article>
-{/each}
 
 <style>
   article {
@@ -116,3 +93,21 @@
     cursor: pointer;
   }
 </style>
+
+{#each chats as chat (chat.id)}
+  <article class:user={chat.sender_type_text === 'visitor'}>
+    <div class="meta">
+      <span class="time">
+        {new Date(parseFloat(chat.created_at)).toLocaleString('zh-CN', {
+          hour12: false,
+        })}
+      </span>
+      <span class="user">{chat.sender.name}</span>
+    </div>
+    <div
+      class="msg"
+      style="background-color: {chat.user !== $user && toHSL(chat.user)}">
+      {chat.content}
+    </div>
+  </article>
+{/each}

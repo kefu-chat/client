@@ -21,9 +21,9 @@ export const nav = localStorageStore({
   initialValue: "messages",
 });
 
-export const chatTopic = localStorageStore({
-  storageKey: "chat_topic",
-  initialValue: "gundb",
-});
+// export const chatTopic = localStorageStore({
+//   storageKey: "chat_topic",
+//   initialValue: "gundb",
+// });
 
 export const user = localStorageStore({ storageKey: "chat_user" });

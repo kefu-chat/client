@@ -514,10 +514,10 @@ var app = (function () {
         : typeof globalThis !== 'undefined'
             ? globalThis
             : global);
-    function outro_and_destroy_block(block, lookup) {
-        transition_out(block, 1, 1, () => {
-            lookup.delete(block.key);
-        });
+
+    function destroy_block(block, lookup) {
+        block.d(1);
+        lookup.delete(block.key);
     }
     function update_keyed_each(old_blocks, dirty, get_key, dynamic, ctx, list, lookup, node, destroy, create_each_block, next, get_context) {
         let o = old_blocks.length;
@@ -881,10 +881,10 @@ var app = (function () {
       initialValue: "messages",
     });
 
-    const chatTopic = localStorageStore({
-      storageKey: "chat_topic",
-      initialValue: "gundb",
-    });
+    // export const chatTopic = localStorageStore({
+    //   storageKey: "chat_topic",
+    //   initialValue: "gundb",
+    // });
 
     const user = localStorageStore({ storageKey: "chat_user" });
 
@@ -4032,7 +4032,1495 @@ var app = (function () {
     	}
     }
 
+    var bind$1 = function bind(fn, thisArg) {
+      return function wrap() {
+        var args = new Array(arguments.length);
+        for (var i = 0; i < args.length; i++) {
+          args[i] = arguments[i];
+        }
+        return fn.apply(thisArg, args);
+      };
+    };
+
+    /*global toString:true*/
+
+    // utils is a library of generic helper functions non-specific to axios
+
+    var toString = Object.prototype.toString;
+
+    /**
+     * Determine if a value is an Array
+     *
+     * @param {Object} val The value to test
+     * @returns {boolean} True if value is an Array, otherwise false
+     */
+    function isArray(val) {
+      return toString.call(val) === '[object Array]';
+    }
+
+    /**
+     * Determine if a value is undefined
+     *
+     * @param {Object} val The value to test
+     * @returns {boolean} True if the value is undefined, otherwise false
+     */
+    function isUndefined(val) {
+      return typeof val === 'undefined';
+    }
+
+    /**
+     * Determine if a value is a Buffer
+     *
+     * @param {Object} val The value to test
+     * @returns {boolean} True if value is a Buffer, otherwise false
+     */
+    function isBuffer(val) {
+      return val !== null && !isUndefined(val) && val.constructor !== null && !isUndefined(val.constructor)
+        && typeof val.constructor.isBuffer === 'function' && val.constructor.isBuffer(val);
+    }
+
+    /**
+     * Determine if a value is an ArrayBuffer
+     *
+     * @param {Object} val The value to test
+     * @returns {boolean} True if value is an ArrayBuffer, otherwise false
+     */
+    function isArrayBuffer(val) {
+      return toString.call(val) === '[object ArrayBuffer]';
+    }
+
+    /**
+     * Determine if a value is a FormData
+     *
+     * @param {Object} val The value to test
+     * @returns {boolean} True if value is an FormData, otherwise false
+     */
+    function isFormData(val) {
+      return (typeof FormData !== 'undefined') && (val instanceof FormData);
+    }
+
+    /**
+     * Determine if a value is a view on an ArrayBuffer
+     *
+     * @param {Object} val The value to test
+     * @returns {boolean} True if value is a view on an ArrayBuffer, otherwise false
+     */
+    function isArrayBufferView(val) {
+      var result;
+      if ((typeof ArrayBuffer !== 'undefined') && (ArrayBuffer.isView)) {
+        result = ArrayBuffer.isView(val);
+      } else {
+        result = (val) && (val.buffer) && (val.buffer instanceof ArrayBuffer);
+      }
+      return result;
+    }
+
+    /**
+     * Determine if a value is a String
+     *
+     * @param {Object} val The value to test
+     * @returns {boolean} True if value is a String, otherwise false
+     */
+    function isString(val) {
+      return typeof val === 'string';
+    }
+
+    /**
+     * Determine if a value is a Number
+     *
+     * @param {Object} val The value to test
+     * @returns {boolean} True if value is a Number, otherwise false
+     */
+    function isNumber(val) {
+      return typeof val === 'number';
+    }
+
+    /**
+     * Determine if a value is an Object
+     *
+     * @param {Object} val The value to test
+     * @returns {boolean} True if value is an Object, otherwise false
+     */
+    function isObject(val) {
+      return val !== null && typeof val === 'object';
+    }
+
+    /**
+     * Determine if a value is a plain Object
+     *
+     * @param {Object} val The value to test
+     * @return {boolean} True if value is a plain Object, otherwise false
+     */
+    function isPlainObject(val) {
+      if (toString.call(val) !== '[object Object]') {
+        return false;
+      }
+
+      var prototype = Object.getPrototypeOf(val);
+      return prototype === null || prototype === Object.prototype;
+    }
+
+    /**
+     * Determine if a value is a Date
+     *
+     * @param {Object} val The value to test
+     * @returns {boolean} True if value is a Date, otherwise false
+     */
+    function isDate(val) {
+      return toString.call(val) === '[object Date]';
+    }
+
+    /**
+     * Determine if a value is a File
+     *
+     * @param {Object} val The value to test
+     * @returns {boolean} True if value is a File, otherwise false
+     */
+    function isFile(val) {
+      return toString.call(val) === '[object File]';
+    }
+
+    /**
+     * Determine if a value is a Blob
+     *
+     * @param {Object} val The value to test
+     * @returns {boolean} True if value is a Blob, otherwise false
+     */
+    function isBlob(val) {
+      return toString.call(val) === '[object Blob]';
+    }
+
+    /**
+     * Determine if a value is a Function
+     *
+     * @param {Object} val The value to test
+     * @returns {boolean} True if value is a Function, otherwise false
+     */
+    function isFunction(val) {
+      return toString.call(val) === '[object Function]';
+    }
+
+    /**
+     * Determine if a value is a Stream
+     *
+     * @param {Object} val The value to test
+     * @returns {boolean} True if value is a Stream, otherwise false
+     */
+    function isStream(val) {
+      return isObject(val) && isFunction(val.pipe);
+    }
+
+    /**
+     * Determine if a value is a URLSearchParams object
+     *
+     * @param {Object} val The value to test
+     * @returns {boolean} True if value is a URLSearchParams object, otherwise false
+     */
+    function isURLSearchParams(val) {
+      return typeof URLSearchParams !== 'undefined' && val instanceof URLSearchParams;
+    }
+
+    /**
+     * Trim excess whitespace off the beginning and end of a string
+     *
+     * @param {String} str The String to trim
+     * @returns {String} The String freed of excess whitespace
+     */
+    function trim(str) {
+      return str.replace(/^\s*/, '').replace(/\s*$/, '');
+    }
+
+    /**
+     * Determine if we're running in a standard browser environment
+     *
+     * This allows axios to run in a web worker, and react-native.
+     * Both environments support XMLHttpRequest, but not fully standard globals.
+     *
+     * web workers:
+     *  typeof window -> undefined
+     *  typeof document -> undefined
+     *
+     * react-native:
+     *  navigator.product -> 'ReactNative'
+     * nativescript
+     *  navigator.product -> 'NativeScript' or 'NS'
+     */
+    function isStandardBrowserEnv() {
+      if (typeof navigator !== 'undefined' && (navigator.product === 'ReactNative' ||
+                                               navigator.product === 'NativeScript' ||
+                                               navigator.product === 'NS')) {
+        return false;
+      }
+      return (
+        typeof window !== 'undefined' &&
+        typeof document !== 'undefined'
+      );
+    }
+
+    /**
+     * Iterate over an Array or an Object invoking a function for each item.
+     *
+     * If `obj` is an Array callback will be called passing
+     * the value, index, and complete array for each item.
+     *
+     * If 'obj' is an Object callback will be called passing
+     * the value, key, and complete object for each property.
+     *
+     * @param {Object|Array} obj The object to iterate
+     * @param {Function} fn The callback to invoke for each item
+     */
+    function forEach(obj, fn) {
+      // Don't bother if no value provided
+      if (obj === null || typeof obj === 'undefined') {
+        return;
+      }
+
+      // Force an array if not already something iterable
+      if (typeof obj !== 'object') {
+        /*eslint no-param-reassign:0*/
+        obj = [obj];
+      }
+
+      if (isArray(obj)) {
+        // Iterate over array values
+        for (var i = 0, l = obj.length; i < l; i++) {
+          fn.call(null, obj[i], i, obj);
+        }
+      } else {
+        // Iterate over object keys
+        for (var key in obj) {
+          if (Object.prototype.hasOwnProperty.call(obj, key)) {
+            fn.call(null, obj[key], key, obj);
+          }
+        }
+      }
+    }
+
+    /**
+     * Accepts varargs expecting each argument to be an object, then
+     * immutably merges the properties of each object and returns result.
+     *
+     * When multiple objects contain the same key the later object in
+     * the arguments list will take precedence.
+     *
+     * Example:
+     *
+     * ```js
+     * var result = merge({foo: 123}, {foo: 456});
+     * console.log(result.foo); // outputs 456
+     * ```
+     *
+     * @param {Object} obj1 Object to merge
+     * @returns {Object} Result of all merge properties
+     */
+    function merge(/* obj1, obj2, obj3, ... */) {
+      var result = {};
+      function assignValue(val, key) {
+        if (isPlainObject(result[key]) && isPlainObject(val)) {
+          result[key] = merge(result[key], val);
+        } else if (isPlainObject(val)) {
+          result[key] = merge({}, val);
+        } else if (isArray(val)) {
+          result[key] = val.slice();
+        } else {
+          result[key] = val;
+        }
+      }
+
+      for (var i = 0, l = arguments.length; i < l; i++) {
+        forEach(arguments[i], assignValue);
+      }
+      return result;
+    }
+
+    /**
+     * Extends object a by mutably adding to it the properties of object b.
+     *
+     * @param {Object} a The object to be extended
+     * @param {Object} b The object to copy properties from
+     * @param {Object} thisArg The object to bind function to
+     * @return {Object} The resulting value of object a
+     */
+    function extend(a, b, thisArg) {
+      forEach(b, function assignValue(val, key) {
+        if (thisArg && typeof val === 'function') {
+          a[key] = bind$1(val, thisArg);
+        } else {
+          a[key] = val;
+        }
+      });
+      return a;
+    }
+
+    /**
+     * Remove byte order marker. This catches EF BB BF (the UTF-8 BOM)
+     *
+     * @param {string} content with BOM
+     * @return {string} content value without BOM
+     */
+    function stripBOM(content) {
+      if (content.charCodeAt(0) === 0xFEFF) {
+        content = content.slice(1);
+      }
+      return content;
+    }
+
+    var utils = {
+      isArray: isArray,
+      isArrayBuffer: isArrayBuffer,
+      isBuffer: isBuffer,
+      isFormData: isFormData,
+      isArrayBufferView: isArrayBufferView,
+      isString: isString,
+      isNumber: isNumber,
+      isObject: isObject,
+      isPlainObject: isPlainObject,
+      isUndefined: isUndefined,
+      isDate: isDate,
+      isFile: isFile,
+      isBlob: isBlob,
+      isFunction: isFunction,
+      isStream: isStream,
+      isURLSearchParams: isURLSearchParams,
+      isStandardBrowserEnv: isStandardBrowserEnv,
+      forEach: forEach,
+      merge: merge,
+      extend: extend,
+      trim: trim,
+      stripBOM: stripBOM
+    };
+
+    function encode(val) {
+      return encodeURIComponent(val).
+        replace(/%3A/gi, ':').
+        replace(/%24/g, '$').
+        replace(/%2C/gi, ',').
+        replace(/%20/g, '+').
+        replace(/%5B/gi, '[').
+        replace(/%5D/gi, ']');
+    }
+
+    /**
+     * Build a URL by appending params to the end
+     *
+     * @param {string} url The base of the url (e.g., http://www.google.com)
+     * @param {object} [params] The params to be appended
+     * @returns {string} The formatted url
+     */
+    var buildURL = function buildURL(url, params, paramsSerializer) {
+      /*eslint no-param-reassign:0*/
+      if (!params) {
+        return url;
+      }
+
+      var serializedParams;
+      if (paramsSerializer) {
+        serializedParams = paramsSerializer(params);
+      } else if (utils.isURLSearchParams(params)) {
+        serializedParams = params.toString();
+      } else {
+        var parts = [];
+
+        utils.forEach(params, function serialize(val, key) {
+          if (val === null || typeof val === 'undefined') {
+            return;
+          }
+
+          if (utils.isArray(val)) {
+            key = key + '[]';
+          } else {
+            val = [val];
+          }
+
+          utils.forEach(val, function parseValue(v) {
+            if (utils.isDate(v)) {
+              v = v.toISOString();
+            } else if (utils.isObject(v)) {
+              v = JSON.stringify(v);
+            }
+            parts.push(encode(key) + '=' + encode(v));
+          });
+        });
+
+        serializedParams = parts.join('&');
+      }
+
+      if (serializedParams) {
+        var hashmarkIndex = url.indexOf('#');
+        if (hashmarkIndex !== -1) {
+          url = url.slice(0, hashmarkIndex);
+        }
+
+        url += (url.indexOf('?') === -1 ? '?' : '&') + serializedParams;
+      }
+
+      return url;
+    };
+
+    function InterceptorManager() {
+      this.handlers = [];
+    }
+
+    /**
+     * Add a new interceptor to the stack
+     *
+     * @param {Function} fulfilled The function to handle `then` for a `Promise`
+     * @param {Function} rejected The function to handle `reject` for a `Promise`
+     *
+     * @return {Number} An ID used to remove interceptor later
+     */
+    InterceptorManager.prototype.use = function use(fulfilled, rejected) {
+      this.handlers.push({
+        fulfilled: fulfilled,
+        rejected: rejected
+      });
+      return this.handlers.length - 1;
+    };
+
+    /**
+     * Remove an interceptor from the stack
+     *
+     * @param {Number} id The ID that was returned by `use`
+     */
+    InterceptorManager.prototype.eject = function eject(id) {
+      if (this.handlers[id]) {
+        this.handlers[id] = null;
+      }
+    };
+
+    /**
+     * Iterate over all the registered interceptors
+     *
+     * This method is particularly useful for skipping over any
+     * interceptors that may have become `null` calling `eject`.
+     *
+     * @param {Function} fn The function to call for each interceptor
+     */
+    InterceptorManager.prototype.forEach = function forEach(fn) {
+      utils.forEach(this.handlers, function forEachHandler(h) {
+        if (h !== null) {
+          fn(h);
+        }
+      });
+    };
+
+    var InterceptorManager_1 = InterceptorManager;
+
+    /**
+     * Transform the data for a request or a response
+     *
+     * @param {Object|String} data The data to be transformed
+     * @param {Array} headers The headers for the request or response
+     * @param {Array|Function} fns A single function or Array of functions
+     * @returns {*} The resulting transformed data
+     */
+    var transformData = function transformData(data, headers, fns) {
+      /*eslint no-param-reassign:0*/
+      utils.forEach(fns, function transform(fn) {
+        data = fn(data, headers);
+      });
+
+      return data;
+    };
+
+    var isCancel = function isCancel(value) {
+      return !!(value && value.__CANCEL__);
+    };
+
+    var normalizeHeaderName = function normalizeHeaderName(headers, normalizedName) {
+      utils.forEach(headers, function processHeader(value, name) {
+        if (name !== normalizedName && name.toUpperCase() === normalizedName.toUpperCase()) {
+          headers[normalizedName] = value;
+          delete headers[name];
+        }
+      });
+    };
+
+    /**
+     * Update an Error with the specified config, error code, and response.
+     *
+     * @param {Error} error The error to update.
+     * @param {Object} config The config.
+     * @param {string} [code] The error code (for example, 'ECONNABORTED').
+     * @param {Object} [request] The request.
+     * @param {Object} [response] The response.
+     * @returns {Error} The error.
+     */
+    var enhanceError = function enhanceError(error, config, code, request, response) {
+      error.config = config;
+      if (code) {
+        error.code = code;
+      }
+
+      error.request = request;
+      error.response = response;
+      error.isAxiosError = true;
+
+      error.toJSON = function toJSON() {
+        return {
+          // Standard
+          message: this.message,
+          name: this.name,
+          // Microsoft
+          description: this.description,
+          number: this.number,
+          // Mozilla
+          fileName: this.fileName,
+          lineNumber: this.lineNumber,
+          columnNumber: this.columnNumber,
+          stack: this.stack,
+          // Axios
+          config: this.config,
+          code: this.code
+        };
+      };
+      return error;
+    };
+
+    /**
+     * Create an Error with the specified message, config, error code, request and response.
+     *
+     * @param {string} message The error message.
+     * @param {Object} config The config.
+     * @param {string} [code] The error code (for example, 'ECONNABORTED').
+     * @param {Object} [request] The request.
+     * @param {Object} [response] The response.
+     * @returns {Error} The created error.
+     */
+    var createError = function createError(message, config, code, request, response) {
+      var error = new Error(message);
+      return enhanceError(error, config, code, request, response);
+    };
+
+    /**
+     * Resolve or reject a Promise based on response status.
+     *
+     * @param {Function} resolve A function that resolves the promise.
+     * @param {Function} reject A function that rejects the promise.
+     * @param {object} response The response.
+     */
+    var settle = function settle(resolve, reject, response) {
+      var validateStatus = response.config.validateStatus;
+      if (!response.status || !validateStatus || validateStatus(response.status)) {
+        resolve(response);
+      } else {
+        reject(createError(
+          'Request failed with status code ' + response.status,
+          response.config,
+          null,
+          response.request,
+          response
+        ));
+      }
+    };
+
+    var cookies = (
+      utils.isStandardBrowserEnv() ?
+
+      // Standard browser envs support document.cookie
+        (function standardBrowserEnv() {
+          return {
+            write: function write(name, value, expires, path, domain, secure) {
+              var cookie = [];
+              cookie.push(name + '=' + encodeURIComponent(value));
+
+              if (utils.isNumber(expires)) {
+                cookie.push('expires=' + new Date(expires).toGMTString());
+              }
+
+              if (utils.isString(path)) {
+                cookie.push('path=' + path);
+              }
+
+              if (utils.isString(domain)) {
+                cookie.push('domain=' + domain);
+              }
+
+              if (secure === true) {
+                cookie.push('secure');
+              }
+
+              document.cookie = cookie.join('; ');
+            },
+
+            read: function read(name) {
+              var match = document.cookie.match(new RegExp('(^|;\\s*)(' + name + ')=([^;]*)'));
+              return (match ? decodeURIComponent(match[3]) : null);
+            },
+
+            remove: function remove(name) {
+              this.write(name, '', Date.now() - 86400000);
+            }
+          };
+        })() :
+
+      // Non standard browser env (web workers, react-native) lack needed support.
+        (function nonStandardBrowserEnv() {
+          return {
+            write: function write() {},
+            read: function read() { return null; },
+            remove: function remove() {}
+          };
+        })()
+    );
+
+    /**
+     * Determines whether the specified URL is absolute
+     *
+     * @param {string} url The URL to test
+     * @returns {boolean} True if the specified URL is absolute, otherwise false
+     */
+    var isAbsoluteURL = function isAbsoluteURL(url) {
+      // A URL is considered absolute if it begins with "<scheme>://" or "//" (protocol-relative URL).
+      // RFC 3986 defines scheme name as a sequence of characters beginning with a letter and followed
+      // by any combination of letters, digits, plus, period, or hyphen.
+      return /^([a-z][a-z\d\+\-\.]*:)?\/\//i.test(url);
+    };
+
+    /**
+     * Creates a new URL by combining the specified URLs
+     *
+     * @param {string} baseURL The base URL
+     * @param {string} relativeURL The relative URL
+     * @returns {string} The combined URL
+     */
+    var combineURLs = function combineURLs(baseURL, relativeURL) {
+      return relativeURL
+        ? baseURL.replace(/\/+$/, '') + '/' + relativeURL.replace(/^\/+/, '')
+        : baseURL;
+    };
+
+    /**
+     * Creates a new URL by combining the baseURL with the requestedURL,
+     * only when the requestedURL is not already an absolute URL.
+     * If the requestURL is absolute, this function returns the requestedURL untouched.
+     *
+     * @param {string} baseURL The base URL
+     * @param {string} requestedURL Absolute or relative URL to combine
+     * @returns {string} The combined full path
+     */
+    var buildFullPath = function buildFullPath(baseURL, requestedURL) {
+      if (baseURL && !isAbsoluteURL(requestedURL)) {
+        return combineURLs(baseURL, requestedURL);
+      }
+      return requestedURL;
+    };
+
+    // Headers whose duplicates are ignored by node
+    // c.f. https://nodejs.org/api/http.html#http_message_headers
+    var ignoreDuplicateOf = [
+      'age', 'authorization', 'content-length', 'content-type', 'etag',
+      'expires', 'from', 'host', 'if-modified-since', 'if-unmodified-since',
+      'last-modified', 'location', 'max-forwards', 'proxy-authorization',
+      'referer', 'retry-after', 'user-agent'
+    ];
+
+    /**
+     * Parse headers into an object
+     *
+     * ```
+     * Date: Wed, 27 Aug 2014 08:58:49 GMT
+     * Content-Type: application/json
+     * Connection: keep-alive
+     * Transfer-Encoding: chunked
+     * ```
+     *
+     * @param {String} headers Headers needing to be parsed
+     * @returns {Object} Headers parsed into an object
+     */
+    var parseHeaders = function parseHeaders(headers) {
+      var parsed = {};
+      var key;
+      var val;
+      var i;
+
+      if (!headers) { return parsed; }
+
+      utils.forEach(headers.split('\n'), function parser(line) {
+        i = line.indexOf(':');
+        key = utils.trim(line.substr(0, i)).toLowerCase();
+        val = utils.trim(line.substr(i + 1));
+
+        if (key) {
+          if (parsed[key] && ignoreDuplicateOf.indexOf(key) >= 0) {
+            return;
+          }
+          if (key === 'set-cookie') {
+            parsed[key] = (parsed[key] ? parsed[key] : []).concat([val]);
+          } else {
+            parsed[key] = parsed[key] ? parsed[key] + ', ' + val : val;
+          }
+        }
+      });
+
+      return parsed;
+    };
+
+    var isURLSameOrigin = (
+      utils.isStandardBrowserEnv() ?
+
+      // Standard browser envs have full support of the APIs needed to test
+      // whether the request URL is of the same origin as current location.
+        (function standardBrowserEnv() {
+          var msie = /(msie|trident)/i.test(navigator.userAgent);
+          var urlParsingNode = document.createElement('a');
+          var originURL;
+
+          /**
+        * Parse a URL to discover it's components
+        *
+        * @param {String} url The URL to be parsed
+        * @returns {Object}
+        */
+          function resolveURL(url) {
+            var href = url;
+
+            if (msie) {
+            // IE needs attribute set twice to normalize properties
+              urlParsingNode.setAttribute('href', href);
+              href = urlParsingNode.href;
+            }
+
+            urlParsingNode.setAttribute('href', href);
+
+            // urlParsingNode provides the UrlUtils interface - http://url.spec.whatwg.org/#urlutils
+            return {
+              href: urlParsingNode.href,
+              protocol: urlParsingNode.protocol ? urlParsingNode.protocol.replace(/:$/, '') : '',
+              host: urlParsingNode.host,
+              search: urlParsingNode.search ? urlParsingNode.search.replace(/^\?/, '') : '',
+              hash: urlParsingNode.hash ? urlParsingNode.hash.replace(/^#/, '') : '',
+              hostname: urlParsingNode.hostname,
+              port: urlParsingNode.port,
+              pathname: (urlParsingNode.pathname.charAt(0) === '/') ?
+                urlParsingNode.pathname :
+                '/' + urlParsingNode.pathname
+            };
+          }
+
+          originURL = resolveURL(window.location.href);
+
+          /**
+        * Determine if a URL shares the same origin as the current location
+        *
+        * @param {String} requestURL The URL to test
+        * @returns {boolean} True if URL shares the same origin, otherwise false
+        */
+          return function isURLSameOrigin(requestURL) {
+            var parsed = (utils.isString(requestURL)) ? resolveURL(requestURL) : requestURL;
+            return (parsed.protocol === originURL.protocol &&
+                parsed.host === originURL.host);
+          };
+        })() :
+
+      // Non standard browser envs (web workers, react-native) lack needed support.
+        (function nonStandardBrowserEnv() {
+          return function isURLSameOrigin() {
+            return true;
+          };
+        })()
+    );
+
+    var xhr = function xhrAdapter(config) {
+      return new Promise(function dispatchXhrRequest(resolve, reject) {
+        var requestData = config.data;
+        var requestHeaders = config.headers;
+
+        if (utils.isFormData(requestData)) {
+          delete requestHeaders['Content-Type']; // Let the browser set it
+        }
+
+        if (
+          (utils.isBlob(requestData) || utils.isFile(requestData)) &&
+          requestData.type
+        ) {
+          delete requestHeaders['Content-Type']; // Let the browser set it
+        }
+
+        var request = new XMLHttpRequest();
+
+        // HTTP basic authentication
+        if (config.auth) {
+          var username = config.auth.username || '';
+          var password = unescape(encodeURIComponent(config.auth.password)) || '';
+          requestHeaders.Authorization = 'Basic ' + btoa(username + ':' + password);
+        }
+
+        var fullPath = buildFullPath(config.baseURL, config.url);
+        request.open(config.method.toUpperCase(), buildURL(fullPath, config.params, config.paramsSerializer), true);
+
+        // Set the request timeout in MS
+        request.timeout = config.timeout;
+
+        // Listen for ready state
+        request.onreadystatechange = function handleLoad() {
+          if (!request || request.readyState !== 4) {
+            return;
+          }
+
+          // The request errored out and we didn't get a response, this will be
+          // handled by onerror instead
+          // With one exception: request that using file: protocol, most browsers
+          // will return status as 0 even though it's a successful request
+          if (request.status === 0 && !(request.responseURL && request.responseURL.indexOf('file:') === 0)) {
+            return;
+          }
+
+          // Prepare the response
+          var responseHeaders = 'getAllResponseHeaders' in request ? parseHeaders(request.getAllResponseHeaders()) : null;
+          var responseData = !config.responseType || config.responseType === 'text' ? request.responseText : request.response;
+          var response = {
+            data: responseData,
+            status: request.status,
+            statusText: request.statusText,
+            headers: responseHeaders,
+            config: config,
+            request: request
+          };
+
+          settle(resolve, reject, response);
+
+          // Clean up request
+          request = null;
+        };
+
+        // Handle browser request cancellation (as opposed to a manual cancellation)
+        request.onabort = function handleAbort() {
+          if (!request) {
+            return;
+          }
+
+          reject(createError('Request aborted', config, 'ECONNABORTED', request));
+
+          // Clean up request
+          request = null;
+        };
+
+        // Handle low level network errors
+        request.onerror = function handleError() {
+          // Real errors are hidden from us by the browser
+          // onerror should only fire if it's a network error
+          reject(createError('Network Error', config, null, request));
+
+          // Clean up request
+          request = null;
+        };
+
+        // Handle timeout
+        request.ontimeout = function handleTimeout() {
+          var timeoutErrorMessage = 'timeout of ' + config.timeout + 'ms exceeded';
+          if (config.timeoutErrorMessage) {
+            timeoutErrorMessage = config.timeoutErrorMessage;
+          }
+          reject(createError(timeoutErrorMessage, config, 'ECONNABORTED',
+            request));
+
+          // Clean up request
+          request = null;
+        };
+
+        // Add xsrf header
+        // This is only done if running in a standard browser environment.
+        // Specifically not if we're in a web worker, or react-native.
+        if (utils.isStandardBrowserEnv()) {
+          // Add xsrf header
+          var xsrfValue = (config.withCredentials || isURLSameOrigin(fullPath)) && config.xsrfCookieName ?
+            cookies.read(config.xsrfCookieName) :
+            undefined;
+
+          if (xsrfValue) {
+            requestHeaders[config.xsrfHeaderName] = xsrfValue;
+          }
+        }
+
+        // Add headers to the request
+        if ('setRequestHeader' in request) {
+          utils.forEach(requestHeaders, function setRequestHeader(val, key) {
+            if (typeof requestData === 'undefined' && key.toLowerCase() === 'content-type') {
+              // Remove Content-Type if data is undefined
+              delete requestHeaders[key];
+            } else {
+              // Otherwise add header to the request
+              request.setRequestHeader(key, val);
+            }
+          });
+        }
+
+        // Add withCredentials to request if needed
+        if (!utils.isUndefined(config.withCredentials)) {
+          request.withCredentials = !!config.withCredentials;
+        }
+
+        // Add responseType to request if needed
+        if (config.responseType) {
+          try {
+            request.responseType = config.responseType;
+          } catch (e) {
+            // Expected DOMException thrown by browsers not compatible XMLHttpRequest Level 2.
+            // But, this can be suppressed for 'json' type as it can be parsed by default 'transformResponse' function.
+            if (config.responseType !== 'json') {
+              throw e;
+            }
+          }
+        }
+
+        // Handle progress if needed
+        if (typeof config.onDownloadProgress === 'function') {
+          request.addEventListener('progress', config.onDownloadProgress);
+        }
+
+        // Not all browsers support upload events
+        if (typeof config.onUploadProgress === 'function' && request.upload) {
+          request.upload.addEventListener('progress', config.onUploadProgress);
+        }
+
+        if (config.cancelToken) {
+          // Handle cancellation
+          config.cancelToken.promise.then(function onCanceled(cancel) {
+            if (!request) {
+              return;
+            }
+
+            request.abort();
+            reject(cancel);
+            // Clean up request
+            request = null;
+          });
+        }
+
+        if (!requestData) {
+          requestData = null;
+        }
+
+        // Send the request
+        request.send(requestData);
+      });
+    };
+
+    var DEFAULT_CONTENT_TYPE = {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    };
+
+    function setContentTypeIfUnset(headers, value) {
+      if (!utils.isUndefined(headers) && utils.isUndefined(headers['Content-Type'])) {
+        headers['Content-Type'] = value;
+      }
+    }
+
+    function getDefaultAdapter() {
+      var adapter;
+      if (typeof XMLHttpRequest !== 'undefined') {
+        // For browsers use XHR adapter
+        adapter = xhr;
+      } else if (typeof process !== 'undefined' && Object.prototype.toString.call(process) === '[object process]') {
+        // For node use HTTP adapter
+        adapter = xhr;
+      }
+      return adapter;
+    }
+
+    var defaults = {
+      adapter: getDefaultAdapter(),
+
+      transformRequest: [function transformRequest(data, headers) {
+        normalizeHeaderName(headers, 'Accept');
+        normalizeHeaderName(headers, 'Content-Type');
+        if (utils.isFormData(data) ||
+          utils.isArrayBuffer(data) ||
+          utils.isBuffer(data) ||
+          utils.isStream(data) ||
+          utils.isFile(data) ||
+          utils.isBlob(data)
+        ) {
+          return data;
+        }
+        if (utils.isArrayBufferView(data)) {
+          return data.buffer;
+        }
+        if (utils.isURLSearchParams(data)) {
+          setContentTypeIfUnset(headers, 'application/x-www-form-urlencoded;charset=utf-8');
+          return data.toString();
+        }
+        if (utils.isObject(data)) {
+          setContentTypeIfUnset(headers, 'application/json;charset=utf-8');
+          return JSON.stringify(data);
+        }
+        return data;
+      }],
+
+      transformResponse: [function transformResponse(data) {
+        /*eslint no-param-reassign:0*/
+        if (typeof data === 'string') {
+          try {
+            data = JSON.parse(data);
+          } catch (e) { /* Ignore */ }
+        }
+        return data;
+      }],
+
+      /**
+       * A timeout in milliseconds to abort a request. If set to 0 (default) a
+       * timeout is not created.
+       */
+      timeout: 0,
+
+      xsrfCookieName: 'XSRF-TOKEN',
+      xsrfHeaderName: 'X-XSRF-TOKEN',
+
+      maxContentLength: -1,
+      maxBodyLength: -1,
+
+      validateStatus: function validateStatus(status) {
+        return status >= 200 && status < 300;
+      }
+    };
+
+    defaults.headers = {
+      common: {
+        'Accept': 'application/json, text/plain, */*'
+      }
+    };
+
+    utils.forEach(['delete', 'get', 'head'], function forEachMethodNoData(method) {
+      defaults.headers[method] = {};
+    });
+
+    utils.forEach(['post', 'put', 'patch'], function forEachMethodWithData(method) {
+      defaults.headers[method] = utils.merge(DEFAULT_CONTENT_TYPE);
+    });
+
+    var defaults_1 = defaults;
+
+    /**
+     * Throws a `Cancel` if cancellation has been requested.
+     */
+    function throwIfCancellationRequested(config) {
+      if (config.cancelToken) {
+        config.cancelToken.throwIfRequested();
+      }
+    }
+
+    /**
+     * Dispatch a request to the server using the configured adapter.
+     *
+     * @param {object} config The config that is to be used for the request
+     * @returns {Promise} The Promise to be fulfilled
+     */
+    var dispatchRequest = function dispatchRequest(config) {
+      throwIfCancellationRequested(config);
+
+      // Ensure headers exist
+      config.headers = config.headers || {};
+
+      // Transform request data
+      config.data = transformData(
+        config.data,
+        config.headers,
+        config.transformRequest
+      );
+
+      // Flatten headers
+      config.headers = utils.merge(
+        config.headers.common || {},
+        config.headers[config.method] || {},
+        config.headers
+      );
+
+      utils.forEach(
+        ['delete', 'get', 'head', 'post', 'put', 'patch', 'common'],
+        function cleanHeaderConfig(method) {
+          delete config.headers[method];
+        }
+      );
+
+      var adapter = config.adapter || defaults_1.adapter;
+
+      return adapter(config).then(function onAdapterResolution(response) {
+        throwIfCancellationRequested(config);
+
+        // Transform response data
+        response.data = transformData(
+          response.data,
+          response.headers,
+          config.transformResponse
+        );
+
+        return response;
+      }, function onAdapterRejection(reason) {
+        if (!isCancel(reason)) {
+          throwIfCancellationRequested(config);
+
+          // Transform response data
+          if (reason && reason.response) {
+            reason.response.data = transformData(
+              reason.response.data,
+              reason.response.headers,
+              config.transformResponse
+            );
+          }
+        }
+
+        return Promise.reject(reason);
+      });
+    };
+
+    /**
+     * Config-specific merge-function which creates a new config-object
+     * by merging two configuration objects together.
+     *
+     * @param {Object} config1
+     * @param {Object} config2
+     * @returns {Object} New object resulting from merging config2 to config1
+     */
+    var mergeConfig = function mergeConfig(config1, config2) {
+      // eslint-disable-next-line no-param-reassign
+      config2 = config2 || {};
+      var config = {};
+
+      var valueFromConfig2Keys = ['url', 'method', 'data'];
+      var mergeDeepPropertiesKeys = ['headers', 'auth', 'proxy', 'params'];
+      var defaultToConfig2Keys = [
+        'baseURL', 'transformRequest', 'transformResponse', 'paramsSerializer',
+        'timeout', 'timeoutMessage', 'withCredentials', 'adapter', 'responseType', 'xsrfCookieName',
+        'xsrfHeaderName', 'onUploadProgress', 'onDownloadProgress', 'decompress',
+        'maxContentLength', 'maxBodyLength', 'maxRedirects', 'transport', 'httpAgent',
+        'httpsAgent', 'cancelToken', 'socketPath', 'responseEncoding'
+      ];
+      var directMergeKeys = ['validateStatus'];
+
+      function getMergedValue(target, source) {
+        if (utils.isPlainObject(target) && utils.isPlainObject(source)) {
+          return utils.merge(target, source);
+        } else if (utils.isPlainObject(source)) {
+          return utils.merge({}, source);
+        } else if (utils.isArray(source)) {
+          return source.slice();
+        }
+        return source;
+      }
+
+      function mergeDeepProperties(prop) {
+        if (!utils.isUndefined(config2[prop])) {
+          config[prop] = getMergedValue(config1[prop], config2[prop]);
+        } else if (!utils.isUndefined(config1[prop])) {
+          config[prop] = getMergedValue(undefined, config1[prop]);
+        }
+      }
+
+      utils.forEach(valueFromConfig2Keys, function valueFromConfig2(prop) {
+        if (!utils.isUndefined(config2[prop])) {
+          config[prop] = getMergedValue(undefined, config2[prop]);
+        }
+      });
+
+      utils.forEach(mergeDeepPropertiesKeys, mergeDeepProperties);
+
+      utils.forEach(defaultToConfig2Keys, function defaultToConfig2(prop) {
+        if (!utils.isUndefined(config2[prop])) {
+          config[prop] = getMergedValue(undefined, config2[prop]);
+        } else if (!utils.isUndefined(config1[prop])) {
+          config[prop] = getMergedValue(undefined, config1[prop]);
+        }
+      });
+
+      utils.forEach(directMergeKeys, function merge(prop) {
+        if (prop in config2) {
+          config[prop] = getMergedValue(config1[prop], config2[prop]);
+        } else if (prop in config1) {
+          config[prop] = getMergedValue(undefined, config1[prop]);
+        }
+      });
+
+      var axiosKeys = valueFromConfig2Keys
+        .concat(mergeDeepPropertiesKeys)
+        .concat(defaultToConfig2Keys)
+        .concat(directMergeKeys);
+
+      var otherKeys = Object
+        .keys(config1)
+        .concat(Object.keys(config2))
+        .filter(function filterAxiosKeys(key) {
+          return axiosKeys.indexOf(key) === -1;
+        });
+
+      utils.forEach(otherKeys, mergeDeepProperties);
+
+      return config;
+    };
+
+    /**
+     * Create a new instance of Axios
+     *
+     * @param {Object} instanceConfig The default config for the instance
+     */
+    function Axios(instanceConfig) {
+      this.defaults = instanceConfig;
+      this.interceptors = {
+        request: new InterceptorManager_1(),
+        response: new InterceptorManager_1()
+      };
+    }
+
+    /**
+     * Dispatch a request
+     *
+     * @param {Object} config The config specific for this request (merged with this.defaults)
+     */
+    Axios.prototype.request = function request(config) {
+      /*eslint no-param-reassign:0*/
+      // Allow for axios('example/url'[, config]) a la fetch API
+      if (typeof config === 'string') {
+        config = arguments[1] || {};
+        config.url = arguments[0];
+      } else {
+        config = config || {};
+      }
+
+      config = mergeConfig(this.defaults, config);
+
+      // Set config.method
+      if (config.method) {
+        config.method = config.method.toLowerCase();
+      } else if (this.defaults.method) {
+        config.method = this.defaults.method.toLowerCase();
+      } else {
+        config.method = 'get';
+      }
+
+      // Hook up interceptors middleware
+      var chain = [dispatchRequest, undefined];
+      var promise = Promise.resolve(config);
+
+      this.interceptors.request.forEach(function unshiftRequestInterceptors(interceptor) {
+        chain.unshift(interceptor.fulfilled, interceptor.rejected);
+      });
+
+      this.interceptors.response.forEach(function pushResponseInterceptors(interceptor) {
+        chain.push(interceptor.fulfilled, interceptor.rejected);
+      });
+
+      while (chain.length) {
+        promise = promise.then(chain.shift(), chain.shift());
+      }
+
+      return promise;
+    };
+
+    Axios.prototype.getUri = function getUri(config) {
+      config = mergeConfig(this.defaults, config);
+      return buildURL(config.url, config.params, config.paramsSerializer).replace(/^\?/, '');
+    };
+
+    // Provide aliases for supported request methods
+    utils.forEach(['delete', 'get', 'head', 'options'], function forEachMethodNoData(method) {
+      /*eslint func-names:0*/
+      Axios.prototype[method] = function(url, config) {
+        return this.request(mergeConfig(config || {}, {
+          method: method,
+          url: url
+        }));
+      };
+    });
+
+    utils.forEach(['post', 'put', 'patch'], function forEachMethodWithData(method) {
+      /*eslint func-names:0*/
+      Axios.prototype[method] = function(url, data, config) {
+        return this.request(mergeConfig(config || {}, {
+          method: method,
+          url: url,
+          data: data
+        }));
+      };
+    });
+
+    var Axios_1 = Axios;
+
+    /**
+     * A `Cancel` is an object that is thrown when an operation is canceled.
+     *
+     * @class
+     * @param {string=} message The message.
+     */
+    function Cancel(message) {
+      this.message = message;
+    }
+
+    Cancel.prototype.toString = function toString() {
+      return 'Cancel' + (this.message ? ': ' + this.message : '');
+    };
+
+    Cancel.prototype.__CANCEL__ = true;
+
+    var Cancel_1 = Cancel;
+
+    /**
+     * A `CancelToken` is an object that can be used to request cancellation of an operation.
+     *
+     * @class
+     * @param {Function} executor The executor function.
+     */
+    function CancelToken(executor) {
+      if (typeof executor !== 'function') {
+        throw new TypeError('executor must be a function.');
+      }
+
+      var resolvePromise;
+      this.promise = new Promise(function promiseExecutor(resolve) {
+        resolvePromise = resolve;
+      });
+
+      var token = this;
+      executor(function cancel(message) {
+        if (token.reason) {
+          // Cancellation has already been requested
+          return;
+        }
+
+        token.reason = new Cancel_1(message);
+        resolvePromise(token.reason);
+      });
+    }
+
+    /**
+     * Throws a `Cancel` if cancellation has been requested.
+     */
+    CancelToken.prototype.throwIfRequested = function throwIfRequested() {
+      if (this.reason) {
+        throw this.reason;
+      }
+    };
+
+    /**
+     * Returns an object that contains a new `CancelToken` and a function that, when called,
+     * cancels the `CancelToken`.
+     */
+    CancelToken.source = function source() {
+      var cancel;
+      var token = new CancelToken(function executor(c) {
+        cancel = c;
+      });
+      return {
+        token: token,
+        cancel: cancel
+      };
+    };
+
+    var CancelToken_1 = CancelToken;
+
+    /**
+     * Syntactic sugar for invoking a function and expanding an array for arguments.
+     *
+     * Common use case would be to use `Function.prototype.apply`.
+     *
+     *  ```js
+     *  function f(x, y, z) {}
+     *  var args = [1, 2, 3];
+     *  f.apply(null, args);
+     *  ```
+     *
+     * With `spread` this example can be re-written.
+     *
+     *  ```js
+     *  spread(function(x, y, z) {})([1, 2, 3]);
+     *  ```
+     *
+     * @param {Function} callback
+     * @returns {Function}
+     */
+    var spread = function spread(callback) {
+      return function wrap(arr) {
+        return callback.apply(null, arr);
+      };
+    };
+
+    /**
+     * Create an instance of Axios
+     *
+     * @param {Object} defaultConfig The default config for the instance
+     * @return {Axios} A new instance of Axios
+     */
+    function createInstance(defaultConfig) {
+      var context = new Axios_1(defaultConfig);
+      var instance = bind$1(Axios_1.prototype.request, context);
+
+      // Copy axios.prototype to instance
+      utils.extend(instance, Axios_1.prototype, context);
+
+      // Copy context to instance
+      utils.extend(instance, context);
+
+      return instance;
+    }
+
+    // Create the default instance to be exported
+    var axios = createInstance(defaults_1);
+
+    // Expose Axios class to allow class inheritance
+    axios.Axios = Axios_1;
+
+    // Factory for creating new instances
+    axios.create = function create(instanceConfig) {
+      return createInstance(mergeConfig(axios.defaults, instanceConfig));
+    };
+
+    // Expose Cancel & CancelToken
+    axios.Cancel = Cancel_1;
+    axios.CancelToken = CancelToken_1;
+    axios.isCancel = isCancel;
+
+    // Expose all/spread
+    axios.all = function all(promises) {
+      return Promise.all(promises);
+    };
+    axios.spread = spread;
+
+    var axios_1 = axios;
+
+    // Allow use of default import syntax in TypeScript
+    var _default = axios;
+    axios_1.default = _default;
+
+    var axios$1 = axios_1;
+
+    const request = axios$1.create({
+      timeout: 5000,
+    });
+
+    request.interceptors.request.use(
+      async (config) => {
+        const baseUrl = "http://dev.fastsupport.cn/";
+        config.baseURL = baseUrl;
+        const token = localStorage.getItem("visitor_token");
+        if (token) {
+          config.headers = {
+            Authorization: "Bearer " + token,
+          };
+        }
+        return config;
+      },
+      (error) => {
+        return Promise.reject(error);
+      }
+    );
+
+    request.interceptors.response.use(
+      (response) => {
+        const data = response.data || {};
+        if (data.Status !== 200) ;
+        return data;
+      },
+      (err) => {
+        const data = err.response.data || {};
+        if (data.status === 401 || data.code === 1003) {
+          localStorage.removeItem("visitor_token");
+        }
+        return Promise.reject(err);
+      }
+    );
+
     /* src/MessageInput.svelte generated by Svelte v3.21.0 */
+
+    const { console: console_1 } = globals;
     const file$2 = "src/MessageInput.svelte";
 
     function create_fragment$2(ctx) {
@@ -4070,9 +5558,9 @@ var app = (function () {
     			attr_dev(form, "method", "get");
     			attr_dev(form, "autocomplete", "off");
     			attr_dev(form, "class", "svelte-1djjhy7");
-    			add_location(form, file$2, 11, 2, 256);
+    			add_location(form, file$2, 39, 2, 767);
     			attr_dev(div, "class", "svelte-1djjhy7");
-    			add_location(div, file$2, 10, 0, 248);
+    			add_location(div, file$2, 38, 0, 759);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -4128,12 +5616,26 @@ var app = (function () {
     	let $user;
     	validate_store(user, "user");
     	component_subscribe($$self, user, $$value => $$invalidate(1, $user = $$value));
-    	const dispatch = createEventDispatcher();
     	let msgInput;
+
+    	function sendMessage() {
+    		const id = localStorage.getItem("conversation_id");
+
+    		if (id) {
+    			const { data } = request({
+    				url: `api/visitor/conversation/${id}/send-message`,
+    				method: "POST",
+    				data: { type: 1, content: msgInput }
+    			});
+
+    			console.log(data);
+    		}
+    	}
+
     	const writable_props = [];
 
     	Object.keys($$props).forEach(key => {
-    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<MessageInput> was created with unknown prop '${key}'`);
+    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console_1.warn(`<MessageInput> was created with unknown prop '${key}'`);
     	});
 
     	let { $$slots = {}, $$scope } = $$props;
@@ -4146,7 +5648,7 @@ var app = (function () {
 
     	const submit_handler = e => {
     		if (!msgInput || !msgInput.trim()) return;
-    		dispatch("message", msgInput);
+    		sendMessage();
     		$$invalidate(0, msgInput = "");
     		e.target.msg.focus();
     	};
@@ -4155,9 +5657,9 @@ var app = (function () {
     		createEventDispatcher,
     		user,
     		Input,
-    		gun: gun$1,
-    		dispatch,
+    		request,
     		msgInput,
+    		sendMessage,
     		$user
     	});
 
@@ -4169,7 +5671,7 @@ var app = (function () {
     		$$self.$inject_state($$props.$$inject);
     	}
 
-    	return [msgInput, $user, dispatch, input_value_binding, submit_handler];
+    	return [msgInput, $user, sendMessage, input_value_binding, submit_handler];
     }
 
     class MessageInput extends SvelteComponentDev {
@@ -4220,29 +5722,26 @@ var app = (function () {
 
     function get_each_context(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[5] = list[i];
+    	child_ctx[4] = list[i];
     	return child_ctx;
     }
 
-    // (32:0) {#each chats as chat (chat.msgId)}
+    // (97:0) {#each chats as chat (chat.id)}
     function create_each_block(key_1, ctx) {
     	let article;
     	let div0;
     	let span0;
-    	let t0_value = new Date(parseFloat(/*chat*/ ctx[5].time)).toLocaleString("en-US", { hour12: false }) + "";
+    	let t0_value = new Date(parseFloat(/*chat*/ ctx[4].created_at)).toLocaleString("zh-CN", { hour12: false }) + "";
     	let t0;
     	let t1;
     	let span1;
-    	let t2_value = /*chat*/ ctx[5].user + "";
+    	let t2_value = /*chat*/ ctx[4].sender.name + "";
     	let t2;
     	let t3;
     	let div1;
-    	let t4_value = /*chat*/ ctx[5].msg + "";
+    	let t4_value = /*chat*/ ctx[4].content + "";
     	let t4;
     	let t5;
-    	let article_intro;
-    	let article_outro;
-    	let current;
 
     	const block = {
     		key: key_1,
@@ -4260,17 +5759,17 @@ var app = (function () {
     			t4 = text(t4_value);
     			t5 = space();
     			attr_dev(span0, "class", "time");
-    			add_location(span0, file$3, 38, 6, 933);
+    			add_location(span0, file$3, 99, 6, 2278);
     			attr_dev(span1, "class", "user svelte-n2su4y");
-    			add_location(span1, file$3, 43, 6, 1077);
+    			add_location(span1, file$3, 104, 6, 2428);
     			attr_dev(div0, "class", "meta svelte-n2su4y");
-    			add_location(div0, file$3, 37, 4, 908);
+    			add_location(div0, file$3, 98, 4, 2253);
     			attr_dev(div1, "class", "msg svelte-n2su4y");
-    			set_style(div1, "background-color", /*chat*/ ctx[5].user !== /*$user*/ ctx[1] && toHSL(/*chat*/ ctx[5].user));
-    			add_location(div1, file$3, 45, 4, 1130);
+    			set_style(div1, "background-color", /*chat*/ ctx[4].user !== /*$user*/ ctx[1] && toHSL(/*chat*/ ctx[4].user));
+    			add_location(div1, file$3, 106, 4, 2488);
     			attr_dev(article, "class", "svelte-n2su4y");
-    			toggle_class(article, "user", /*chat*/ ctx[5].user === /*$user*/ ctx[1]);
-    			add_location(article, file$3, 32, 2, 807);
+    			toggle_class(article, "user", /*chat*/ ctx[4].sender_type_text === "visitor");
+    			add_location(article, file$3, 97, 2, 2190);
     			this.first = article;
     		},
     		m: function mount(target, anchor) {
@@ -4285,40 +5784,22 @@ var app = (function () {
     			append_dev(article, div1);
     			append_dev(div1, t4);
     			append_dev(article, t5);
-    			current = true;
     		},
     		p: function update(ctx, dirty) {
-    			if ((!current || dirty & /*chats*/ 1) && t0_value !== (t0_value = new Date(parseFloat(/*chat*/ ctx[5].time)).toLocaleString("en-US", { hour12: false }) + "")) set_data_dev(t0, t0_value);
-    			if ((!current || dirty & /*chats*/ 1) && t2_value !== (t2_value = /*chat*/ ctx[5].user + "")) set_data_dev(t2, t2_value);
-    			if ((!current || dirty & /*chats*/ 1) && t4_value !== (t4_value = /*chat*/ ctx[5].msg + "")) set_data_dev(t4, t4_value);
-
-    			if (!current || dirty & /*chats, $user*/ 3) {
-    				set_style(div1, "background-color", /*chat*/ ctx[5].user !== /*$user*/ ctx[1] && toHSL(/*chat*/ ctx[5].user));
-    			}
+    			if (dirty & /*chats*/ 1 && t0_value !== (t0_value = new Date(parseFloat(/*chat*/ ctx[4].created_at)).toLocaleString("zh-CN", { hour12: false }) + "")) set_data_dev(t0, t0_value);
+    			if (dirty & /*chats*/ 1 && t2_value !== (t2_value = /*chat*/ ctx[4].sender.name + "")) set_data_dev(t2, t2_value);
+    			if (dirty & /*chats*/ 1 && t4_value !== (t4_value = /*chat*/ ctx[4].content + "")) set_data_dev(t4, t4_value);
 
     			if (dirty & /*chats, $user*/ 3) {
-    				toggle_class(article, "user", /*chat*/ ctx[5].user === /*$user*/ ctx[1]);
+    				set_style(div1, "background-color", /*chat*/ ctx[4].user !== /*$user*/ ctx[1] && toHSL(/*chat*/ ctx[4].user));
     			}
-    		},
-    		i: function intro(local) {
-    			if (current) return;
 
-    			add_render_callback(() => {
-    				if (article_outro) article_outro.end(1);
-    				if (!article_intro) article_intro = create_in_transition(article, fade, {});
-    				article_intro.start();
-    			});
-
-    			current = true;
-    		},
-    		o: function outro(local) {
-    			if (article_intro) article_intro.invalidate();
-    			article_outro = create_out_transition(article, /*send*/ ctx[2], { key: /*chat*/ ctx[5].msgId });
-    			current = false;
+    			if (dirty & /*chats*/ 1) {
+    				toggle_class(article, "user", /*chat*/ ctx[4].sender_type_text === "visitor");
+    			}
     		},
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(article);
-    			if (detaching && article_outro) article_outro.end();
     		}
     	};
 
@@ -4326,7 +5807,7 @@ var app = (function () {
     		block,
     		id: create_each_block.name,
     		type: "each",
-    		source: "(32:0) {#each chats as chat (chat.msgId)}",
+    		source: "(97:0) {#each chats as chat (chat.id)}",
     		ctx
     	});
 
@@ -4337,10 +5818,9 @@ var app = (function () {
     	let each_blocks = [];
     	let each_1_lookup = new Map();
     	let each_1_anchor;
-    	let current;
     	let each_value = /*chats*/ ctx[0];
     	validate_each_argument(each_value);
-    	const get_key = ctx => /*chat*/ ctx[5].msgId;
+    	const get_key = ctx => /*chat*/ ctx[4].id;
     	validate_each_keys(ctx, each_value, get_each_context, get_key);
 
     	for (let i = 0; i < each_value.length; i += 1) {
@@ -4366,34 +5846,17 @@ var app = (function () {
     			}
 
     			insert_dev(target, each_1_anchor, anchor);
-    			current = true;
     		},
     		p: function update(ctx, [dirty]) {
     			if (dirty & /*chats, $user, toHSL, Date, parseFloat*/ 3) {
     				const each_value = /*chats*/ ctx[0];
     				validate_each_argument(each_value);
-    				group_outros();
     				validate_each_keys(ctx, each_value, get_each_context, get_key);
-    				each_blocks = update_keyed_each(each_blocks, dirty, get_key, 1, ctx, each_value, each_1_lookup, each_1_anchor.parentNode, outro_and_destroy_block, create_each_block, each_1_anchor, get_each_context);
-    				check_outros();
+    				each_blocks = update_keyed_each(each_blocks, dirty, get_key, 1, ctx, each_value, each_1_lookup, each_1_anchor.parentNode, destroy_block, create_each_block, each_1_anchor, get_each_context);
     			}
     		},
-    		i: function intro(local) {
-    			if (current) return;
-
-    			for (let i = 0; i < each_value.length; i += 1) {
-    				transition_in(each_blocks[i]);
-    			}
-
-    			current = true;
-    		},
-    		o: function outro(local) {
-    			for (let i = 0; i < each_blocks.length; i += 1) {
-    				transition_out(each_blocks[i]);
-    			}
-
-    			current = false;
-    		},
+    		i: noop,
+    		o: noop,
     		d: function destroy(detaching) {
     			for (let i = 0; i < each_blocks.length; i += 1) {
     				each_blocks[i].d(detaching);
@@ -4418,7 +5881,6 @@ var app = (function () {
     	let $user;
     	validate_store(user, "user");
     	component_subscribe($$self, user, $$value => $$invalidate(1, $user = $$value));
-    	const dispatch = createEventDispatcher();
     	let { chats } = $$props;
 
     	const [send, receive] = crossfade({
@@ -4433,7 +5895,7 @@ var app = (function () {
     				css: t => `
           transform: ${transform} scale(${t});
           opacity: ${t}
-				`
+  			`
     			};
     		}
     	});
@@ -4459,7 +5921,6 @@ var app = (function () {
     		quintOut,
     		crossfade,
     		toHSL,
-    		dispatch,
     		chats,
     		send,
     		receive,
@@ -4474,7 +5935,7 @@ var app = (function () {
     		$$self.$inject_state($$props.$$inject);
     	}
 
-    	return [chats, $user, send];
+    	return [chats, $user];
     }
 
     class MessageList extends SvelteComponentDev {
@@ -4577,10 +6038,10 @@ var app = (function () {
 
     /* src/Messages.svelte generated by Svelte v3.21.0 */
 
-    const { Object: Object_1, console: console_1 } = globals;
+    const { Object: Object_1, console: console_1$1 } = globals;
     const file$5 = "src/Messages.svelte";
 
-    // (103:2) {#if isLoading}
+    // (97:2) {#if isLoading}
     function create_if_block_1$1(ctx) {
     	let current;
     	const spinner = new Spinner({ $$inline: true });
@@ -4611,14 +6072,14 @@ var app = (function () {
     		block,
     		id: create_if_block_1$1.name,
     		type: "if",
-    		source: "(103:2) {#if isLoading}",
+    		source: "(97:2) {#if isLoading}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (117:0) {#if showScrollToBottom}
+    // (110:0) {#if showScrollToBottom}
     function create_if_block$1(ctx) {
     	let current;
 
@@ -4654,7 +6115,7 @@ var app = (function () {
     		block,
     		id: create_if_block$1.name,
     		type: "if",
-    		source: "(117:0) {#if showScrollToBottom}",
+    		source: "(110:0) {#if showScrollToBottom}",
     		ctx
     	});
 
@@ -4677,7 +6138,7 @@ var app = (function () {
     		});
 
     	const messageinput = new MessageInput({ $$inline: true });
-    	messageinput.$on("message", /*message_handler*/ ctx[15]);
+    	messageinput.$on("message", /*message_handler*/ ctx[13]);
     	let if_block1 = /*showScrollToBottom*/ ctx[1] && create_if_block$1(ctx);
 
     	const block = {
@@ -4692,7 +6153,7 @@ var app = (function () {
     			if (if_block1) if_block1.c();
     			if_block1_anchor = empty$1();
     			attr_dev(main_1, "class", "svelte-i15h9r");
-    			add_location(main_1, file$5, 101, 0, 2888);
+    			add_location(main_1, file$5, 95, 0, 2586);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -4702,7 +6163,7 @@ var app = (function () {
     			if (if_block0) if_block0.m(main_1, null);
     			append_dev(main_1, t0);
     			mount_component(messagelist, main_1, null);
-    			/*main_1_binding*/ ctx[14](main_1);
+    			/*main_1_binding*/ ctx[12](main_1);
     			insert_dev(target, t1, anchor);
     			mount_component(messageinput, target, anchor);
     			insert_dev(target, t2, anchor);
@@ -4780,7 +6241,7 @@ var app = (function () {
     			if (detaching) detach_dev(main_1);
     			if (if_block0) if_block0.d();
     			destroy_component(messagelist);
-    			/*main_1_binding*/ ctx[14](null);
+    			/*main_1_binding*/ ctx[12](null);
     			if (detaching) detach_dev(t1);
     			destroy_component(messageinput, detaching);
     			if (detaching) detach_dev(t2);
@@ -4805,11 +6266,8 @@ var app = (function () {
 
     function instance$5($$self, $$props, $$invalidate) {
     	let $user;
-    	let $chatTopic;
     	validate_store(user, "user");
-    	component_subscribe($$self, user, $$value => $$invalidate(11, $user = $$value));
-    	validate_store(chatTopic, "chatTopic");
-    	component_subscribe($$self, chatTopic, $$value => $$invalidate(12, $chatTopic = $$value));
+    	component_subscribe($$self, user, $$value => $$invalidate(10, $user = $$value));
     	let showMessages = 100; // initial messages to load
     	let store = {};
     	let chats = [];
@@ -4833,7 +6291,7 @@ var app = (function () {
 
     			setTimeout(
     				() => {
-    					$$invalidate(7, showMessages += ADD_ON_SCROLL);
+    					showMessages += ADD_ON_SCROLL;
     					if (main.scrollTop === 0) $$invalidate(2, main.scrollTop = 1, main);
     					$$invalidate(3, isLoading = false);
     				},
@@ -4844,33 +6302,21 @@ var app = (function () {
 
     	function handleNewMessage(msg) {
     		const now = new Date().getTime();
-    		const message = { msg, user: $user, time: now };
-    		gun$1.get($chatTopic).set(message);
-    	}
-
-    	function handleDelete(msgId) {
-    		gun$1.get($chatTopic).get(msgId).put(null);
     	}
 
     	onMount(async () => {
-    		gun$1.get($chatTopic).map().on((val, msgId) => {
-    			if (val) {
-    				$$invalidate(8, store[msgId] = { msgId, ...val }, store);
-    			} else {
-    				// null messages are deleted
-    				delete store[msgId];
+    		const id = localStorage.getItem("conversation_id");
 
-    				// reassign store to trigger svelte's reactivity
-    				$$invalidate(8, store);
-    			}
-    		});
+    		if (id) {
+    			const { data } = await request({
+    				url: `api/visitor/conversation/${id}/messages`,
+    				method: "GET"
+    			});
 
-    		const arr = Object.values(store);
-    		const sorted = arr.sort((a, b) => a.time - b.time);
-    		const begin = Math.max(0, sorted.length - showMessages);
-    		const end = arr.length;
-    		$$invalidate(0, chats = arr.slice(begin, end));
-    		console.log(chats);
+    			$$invalidate(0, chats = data.messages);
+    			$$invalidate(3, isLoading = false);
+    			console.log(data);
+    		}
     	});
 
     	beforeUpdate(() => {
@@ -4882,14 +6328,13 @@ var app = (function () {
     	});
 
     	onDestroy(() => {
-    		// remove gun listeners
-    		gun$1.get($chatTopic).off();
-    	});
+    		
+    	}); // remove gun listeners
 
     	const writable_props = [];
 
     	Object_1.keys($$props).forEach(key => {
-    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console_1.warn(`<Messages> was created with unknown prop '${key}'`);
+    		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console_1$1.warn(`<Messages> was created with unknown prop '${key}'`);
     	});
 
     	let { $$slots = {}, $$scope } = $$props;
@@ -4912,13 +6357,13 @@ var app = (function () {
     		afterUpdate,
     		onMount,
     		onDestroy,
-    		chatTopic,
     		user,
     		gun: gun$1,
     		ScrollToBottom,
     		MessageInput,
     		MessageList,
     		Spinner,
+    		request,
     		ADD_ON_SCROLL,
     		showMessages,
     		store,
@@ -4931,20 +6376,18 @@ var app = (function () {
     		scrollToBottom,
     		handleScroll,
     		handleNewMessage,
-    		handleDelete,
-    		$user,
-    		$chatTopic
+    		$user
     	});
 
     	$$self.$inject_state = $$props => {
-    		if ("showMessages" in $$props) $$invalidate(7, showMessages = $$props.showMessages);
-    		if ("store" in $$props) $$invalidate(8, store = $$props.store);
+    		if ("showMessages" in $$props) showMessages = $$props.showMessages;
+    		if ("store" in $$props) store = $$props.store;
     		if ("chats" in $$props) $$invalidate(0, chats = $$props.chats);
     		if ("autoscroll" in $$props) autoscroll = $$props.autoscroll;
     		if ("showScrollToBottom" in $$props) $$invalidate(1, showScrollToBottom = $$props.showScrollToBottom);
     		if ("main" in $$props) $$invalidate(2, main = $$props.main);
     		if ("isLoading" in $$props) $$invalidate(3, isLoading = $$props.isLoading);
-    		if ("timeout" in $$props) $$invalidate(10, timeout = $$props.timeout);
+    		if ("timeout" in $$props) $$invalidate(9, timeout = $$props.timeout);
     	};
 
     	if ($$props && "$$inject" in $$props) {
@@ -4952,21 +6395,21 @@ var app = (function () {
     	}
 
     	$$self.$$.update = () => {
-    		if ($$self.$$.dirty & /*timeout, store, showMessages*/ 1408) {
+    		if ($$self.$$.dirty & /*timeout, chats*/ 513) {
     			 {
-    				$$invalidate(3, isLoading = true);
+    				// isLoading = true;
     				if (timeout) clearTimeout(timeout);
 
     				// debounce update svelte store to avoid overloading ui
-    				$$invalidate(10, timeout = setTimeout(
+    				$$invalidate(9, timeout = setTimeout(
     					() => {
     						// convert key/value object to sorted array of messages (with a max length)
-    						const arr = Object.values(store);
+    						// const arr = Object.values(store);
+    						// const sorted = arr.sort((a, b) => a.time - b.time);
+    						// const begin = Math.max(0, sorted.length - showMessages);
+    						// const end = arr.length;
+    						($$invalidate(0, chats), $$invalidate(9, timeout));
 
-    						const sorted = arr.sort((a, b) => a.time - b.time);
-    						const begin = Math.max(0, sorted.length - showMessages);
-    						const end = arr.length;
-    						$$invalidate(0, chats = arr.slice(begin, end));
     						$$invalidate(3, isLoading = false);
     					},
     					200
@@ -4984,12 +6427,10 @@ var app = (function () {
     		handleScroll,
     		handleNewMessage,
     		showMessages,
-    		store,
     		autoscroll,
     		timeout,
     		$user,
-    		$chatTopic,
-    		handleDelete,
+    		store,
     		main_1_binding,
     		message_handler
     	];
@@ -5401,7 +6842,7 @@ var app = (function () {
     	let t13_value = "0.9.0" + "";
     	let t13;
     	let t14;
-    	let t15_value = "488f976" + "";
+    	let t15_value = "67b1600" + "";
     	let t15;
 
     	const block = {
@@ -5516,7 +6957,7 @@ var app = (function () {
 
     /* src/App.svelte generated by Svelte v3.21.0 */
 
-    // (15:2) <Nav>
+    // (32:2) <Nav>
     function create_default_slot_1(ctx) {
     	let t;
 
@@ -5536,14 +6977,14 @@ var app = (function () {
     		block,
     		id: create_default_slot_1.name,
     		type: "slot",
-    		source: "(15:2) <Nav>",
+    		source: "(32:2) <Nav>",
     		ctx
     	});
 
     	return block;
     }
 
-    // (14:0) <Page>
+    // (31:0) <Page>
     function create_default_slot(ctx) {
     	let t;
     	let current;
@@ -5601,7 +7042,7 @@ var app = (function () {
     		block,
     		id: create_default_slot.name,
     		type: "slot",
-    		source: "(14:0) <Page>",
+    		source: "(31:0) <Page>",
     		ctx
     	});
 
@@ -5675,6 +7116,23 @@ var app = (function () {
     	onMount(async () => {
     		set_store_value(user, $user = "Amazing");
     		set_store_value(nav, $nav = "messages");
+
+    		const { data } = await request({
+    			url: `api/visitor/init`,
+    			method: "POST",
+    			data: {
+    				institution_id: 1,
+    				unique_id: "123456",
+    				userAgent: navigator.userAgent,
+    				languages: navigator.languages,
+    				url: location.href,
+    				title: document.title,
+    				name: "visitor001"
+    			}
+    		});
+
+    		localStorage.setItem("visitor_token", data.visitor_token);
+    		localStorage.setItem("conversation_id", data.conversation.id);
     	});
 
     	const writable_props = [];
@@ -5694,6 +7152,7 @@ var app = (function () {
     		Page,
     		Footer,
     		onMount,
+    		request,
     		$user,
     		$nav
     	});
