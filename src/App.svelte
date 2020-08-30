@@ -8,8 +8,7 @@
   import request from "./request";
 
   onMount(async () => {
-    $user = "Amazing";
-    $nav = "messages";
+    // $nav = "messages";
     const { data } = await request({
       url: `api/visitor/init`,
       method: "POST",
