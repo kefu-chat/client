@@ -24,6 +24,7 @@
   "dependencies": {
     "axios": "^0.20.0",
     "gun": "0.2020.116",
+    "laravel-echo": "^1.8.1",
     "sirv-cli": "^0.4.4"
   }
 }

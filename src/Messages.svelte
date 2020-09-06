@@ -1,12 +1,12 @@
 <script>
   import { beforeUpdate, afterUpdate, onMount, onDestroy } from "svelte";
   import { user } from "./stores.js";
-  import { gun } from "./initGun.js";
   import ScrollToBottom from "./ScrollToBottom.svelte";
   import MessageInput from "./MessageInput.svelte";
   import MessageList from "./MessageList.svelte";
   import Spinner from "./ui/Spinner.svelte";
   import request from "./request";
+  import Echo from "laravel-echo";
 
   const ADD_ON_SCROLL = 50; // messages to add when scrolling to the top
   let showMessages = 100; // initial messages to load
@@ -18,6 +18,7 @@
   let main;
   let isLoading = false;
   let timeout;
+  let echo;
 
   $: {
     // isLoading = true;
@@ -61,13 +62,31 @@
   onMount(async () => {
     const id = localStorage.getItem("conversation_id");
     if (id) {
+      const token = localStorage.getItem("visitor_token");
+      const channel = `conversation.${id}.messaging`;
+      echo = new Echo({
+        broadcaster: "socket.io",
+        host: request.socketUrl,
+        auth: {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      });
       const { data } = await request({
         url: `api/visitor/conversation/${id}/messages`,
         method: "GET",
       });
       chats = data.messages;
       isLoading = false;
-      console.log(data);
+      echo
+        .join(channel)
+        .here()
+        .joining()
+        .leaving()
+        .listen(".message.created", (e) => {
+          chats.push(e);
+        });
     }
   });
 

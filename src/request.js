@@ -3,10 +3,12 @@ import axios from "axios";
 const request = axios.create({
   timeout: 5000,
 });
+request.baseUrl = `http://dev.fastsupport.cn/`;
+request.socketUrl = `http://dev.fastsupport.cn:6001/`;
 
 request.interceptors.request.use(
   async (config) => {
-    const baseUrl = "http://dev.fastsupport.cn/";
+    const baseUrl = request.baseUrl;
     config.baseURL = baseUrl;
     const token = localStorage.getItem("visitor_token");
     if (token) {
