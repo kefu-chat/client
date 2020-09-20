@@ -74,7 +74,7 @@
         },
       });
       const { data } = await request({
-        url: `api/visitor/conversation/${id}/messages`,
+        url: `api/conversation/${id}/messages`,
         method: "GET",
       });
       chats = data.messages;

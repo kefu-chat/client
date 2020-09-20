@@ -9,7 +9,7 @@
     const id = localStorage.getItem("conversation_id");
     if (id) {
       const { data } = request({
-        url: `api/visitor/conversation/${id}/send-message`,
+        url: `api/conversation/${id}/send-message`,
         method: "POST",
         data: { type: 1, content: msgInput },
       });
