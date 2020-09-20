@@ -3130,12 +3130,11 @@ var app = (function () {
     	let dispose;
 
     	function input_value_binding(value) {
-    		/*input_value_binding*/ ctx[3].call(null, value);
+    		/*input_value_binding*/ ctx[2].call(null, value);
     	}
 
     	let input_props = {
     		multiline: true,
-    		disabled: !/*$user*/ ctx[1],
     		maxRows: 3,
     		name: "msg",
     		placeholder: "Message",
@@ -3157,9 +3156,9 @@ var app = (function () {
     			attr_dev(form, "method", "get");
     			attr_dev(form, "autocomplete", "off");
     			attr_dev(form, "class", "svelte-1djjhy7");
-    			add_location(form, file$2, 39, 2, 759);
+    			add_location(form, file$2, 37, 2, 671);
     			attr_dev(div, "class", "svelte-1djjhy7");
-    			add_location(div, file$2, 38, 0, 751);
+    			add_location(div, file$2, 36, 0, 663);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
@@ -3170,11 +3169,10 @@ var app = (function () {
     			mount_component(input, form, null);
     			current = true;
     			if (remount) dispose();
-    			dispose = listen_dev(form, "submit", prevent_default(/*submit_handler*/ ctx[4]), false, true, false);
+    			dispose = listen_dev(form, "submit", prevent_default(/*submit_handler*/ ctx[3]), false, true, false);
     		},
     		p: function update(ctx, [dirty]) {
     			const input_changes = {};
-    			if (dirty & /*$user*/ 2) input_changes.disabled = !/*$user*/ ctx[1];
 
     			if (!updating_value && dirty & /*msgInput*/ 1) {
     				updating_value = true;
@@ -3212,9 +3210,6 @@ var app = (function () {
     }
 
     function instance$2($$self, $$props, $$invalidate) {
-    	let $user;
-    	validate_store(user, "user");
-    	component_subscribe($$self, user, $$value => $$invalidate(1, $user = $$value));
     	let msgInput;
 
     	function sendMessage() {
@@ -3252,15 +3247,7 @@ var app = (function () {
     		e.target.msg.focus();
     	};
 
-    	$$self.$capture_state = () => ({
-    		createEventDispatcher,
-    		user,
-    		Input,
-    		request,
-    		msgInput,
-    		sendMessage,
-    		$user
-    	});
+    	$$self.$capture_state = () => ({ Input, request, msgInput, sendMessage });
 
     	$$self.$inject_state = $$props => {
     		if ("msgInput" in $$props) $$invalidate(0, msgInput = $$props.msgInput);
@@ -3270,7 +3257,7 @@ var app = (function () {
     		$$self.$inject_state($$props.$$inject);
     	}
 
-    	return [msgInput, $user, sendMessage, input_value_binding, submit_handler];
+    	return [msgInput, sendMessage, input_value_binding, submit_handler];
     }
 
     class MessageInput extends SvelteComponentDev {

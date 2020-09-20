@@ -1,6 +1,4 @@
 <script>
-  import { createEventDispatcher } from "svelte";
-  import { user } from "./stores.js";
   import Input from "./ui/Input.svelte";
   import request from "./request";
   let msgInput;
@@ -48,7 +46,6 @@
     }}>
     <Input
       multiline
-      disabled={!$user}
       maxRows={3}
       bind:value={msgInput}
       name="msg"
