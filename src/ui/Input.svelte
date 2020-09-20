@@ -9,7 +9,6 @@
   export let name = null;
   export let maxLength = 160;
   export let maxRows = 1;
-  export let disabled = false;
   export let multiline = false;
 
   // TODO: kinda hacky, on desktop it's more that 40, but calculating chars per line is hard
@@ -31,47 +30,13 @@
       // but not on 'soft return'
       e.target.form.dispatchEvent(
         new Event("submit", {
-          cancelable: true
+          cancelable: true,
         })
       );
       e.preventDefault();
     }
   }
 </script>
-
-<div class="input-with-button">
-  {#if multiline}
-    <textarea
-      {disabled}
-      {rows}
-      class="input"
-      type="text"
-      {maxLength}
-      {name}
-      bind:value
-      on:keypress={handleKeyPress}
-      aria-labelledby={ariaLabelledBy}
-      aria-label={ariaLabel}
-      {placeholder}
-    />
-  {:else}
-    <input
-      {disabled}
-      {rows}
-      class="input"
-      type="text"
-      {maxLength}
-      {name}
-      bind:value
-      aria-labelledby={ariaLabelledBy}
-      aria-label={ariaLabel}
-      {placeholder}
-    />
-  {/if}
-  {#if value}
-    <input class="submit" type="submit" value="Send" in:fade out:fade />
-  {/if}
-</div>
 
 <style>
   .input-with-button {
@@ -114,3 +79,33 @@
     cursor: pointer;
   }
 </style>
+
+<div class="input-with-button">
+  {#if multiline}
+    <textarea
+      {rows}
+      class="input"
+      type="text"
+      {maxLength}
+      {name}
+      bind:value
+      on:keypress={handleKeyPress}
+      aria-labelledby={ariaLabelledBy}
+      aria-label={ariaLabel}
+      {placeholder} />
+  {:else}
+    <input
+      {rows}
+      class="input"
+      type="text"
+      {maxLength}
+      {name}
+      bind:value
+      aria-labelledby={ariaLabelledBy}
+      aria-label={ariaLabel}
+      {placeholder} />
+  {/if}
+  {#if value}
+    <input class="submit" type="submit" value="Send" in:fade out:fade />
+  {/if}
+</div>
