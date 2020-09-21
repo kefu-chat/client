@@ -5,6 +5,7 @@
   import { quintOut } from "svelte/easing";
   import { crossfade } from "svelte/transition";
   import { toHSL } from "./toHSL.js";
+  import format from "date-fns/format";
 
   // const dispatch = createEventDispatcher();
 
@@ -98,9 +99,7 @@
   <article class:user={chat.sender_type_text === 'visitor'}>
     <div class="meta">
       <span class="time">
-        {new Date(parseFloat(chat.created_at)).toLocaleString('zh-CN', {
-          hour12: false,
-        })}
+        {format(new Date(chat.created_at), 'yyyy-MM-dd HH:mm:ss')}
       </span>
       <span class="user">{chat.sender.name}</span>
     </div>
