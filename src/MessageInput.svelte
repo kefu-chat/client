@@ -24,19 +24,20 @@
     width: 100%;
   }
 
-  form {
+  form.msg-send-form {
     margin: 0 auto;
     display: flex;
     flex-direction: column;
     max-width: 640px;
     background-color: white;
-    padding: 0.25em 1em;
+    padding: 0.25em 0.5em;
+    border-top: 1px solid #d8dee3;
   }
 </style>
 
 <div>
   <form
-    method="get"
+    class="msg-send-form"
     autocomplete="off"
     on:submit|preventDefault={(e) => {
       if (!msgInput || !msgInput.trim()) return;
@@ -49,7 +50,7 @@
       maxRows={3}
       bind:value={msgInput}
       name="msg"
-      placeholder="Message"
-      ariaLabel="Message" />
+      placeholder="输入您的消息"
+      ariaLabel="输入您的消息" />
   </form>
 </div>
