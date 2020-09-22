@@ -7,19 +7,21 @@
   import { onMount } from "svelte";
   import request from "./request";
   export let _data = null;
+  const u = new URL(location.href)
   onMount(async () => {
     // $nav = "messages";
     const { data } = await request({
       url: `api/visitor/init`,
       method: "POST",
       data: {
-        institution_id: "rxpXD6uDD0EJqvbD",
-        unique_id: parseInt(Math.random()*9999999).toString(),
-        userAgent: navigator.userAgent,
-        languages: navigator.languages,
-        url: location.href,
-        title: document.title,
-        name: "visitor001",
+        institution_id:  u.searchParams.get('institution_id'), //"rxpXD6uDD0EJqvbD",
+        unique_id:  u.searchParams.get('unique_id'), //parseInt(Math.random()*9999999).toString(),
+        userAgent:  u.searchParams.get('userAgent'), //navigator.userAgent,
+        languages:  [u.searchParams.get('languages[]')], //navigator.languages,
+        url:  u.searchParams.get('url'), //location.href,
+        title:  u.searchParams.get('title'), //document.title,
+        name:  u.searchParams.get('name'), //"visitor001",
+        referer: u.searchParams.get('referer')
       },
     });
     localStorage.setItem("visitor_token", data.visitor_token);
