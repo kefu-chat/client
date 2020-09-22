@@ -1,9 +1,7 @@
 <script>
-  import { nav, user } from "./stores.js";
   import Messages from "./Messages.svelte";
   import Nav from "./ui/Nav.svelte";
   import Page from "./ui/Page.svelte";
-  import Footer from "./Footer.svelte";
   import { onMount } from "svelte";
   import request from "./request";
   export let _data = null;
