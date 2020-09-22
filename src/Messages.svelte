@@ -106,7 +106,7 @@
 
 <style>
   main {
-    margin: auto 0 89px 0;
+    margin: auto 0 100px 0;
     padding: 0.5em 1em 0.5em 1em;
     overflow-y: auto;
   }

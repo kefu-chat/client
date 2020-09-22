@@ -66,7 +66,7 @@
   .submit {
     position: absolute;
     top: 0.4em;
-    right: 0.4em;
+    right: 0em;
     width: 34px;
     height: 34px;
     background: no-repeat 50% 50% url(/up.svg);

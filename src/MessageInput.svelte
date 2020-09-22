@@ -30,7 +30,7 @@
     flex-direction: column;
     max-width: 640px;
     background-color: white;
-    padding: 0.25em 0.5em;
+    padding: 0.25em 1em;
     border-top: 1px solid #d8dee3;
   }
 </style>

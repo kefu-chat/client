@@ -32,7 +32,7 @@
 
 <style>
   article {
-    margin: 1em 0;
+    margin: 0 0;
   }
   .meta {
     font-size: 10px;
@@ -45,7 +45,7 @@
     line-height: 1.8;
     padding: 0.4em 1em;
     background-color: #eee;
-    border-radius: 1em 1em 1em 0;
+    border-radius: 11px;
 
     /* This makes sure returns are also rendered */
     white-space: pre-wrap;
@@ -62,17 +62,15 @@
     word-break: break-all;
     /* Instead use this non-standard one: */
     word-break: break-word;
+    color: #222d38;
   }
 
-  .user {
+  .visitor {
     text-align: right;
   }
 
-  .user > .msg {
-    margin-left: 4em;
-    background-color: #0074d9;
-    color: white;
-    border-radius: 1em 1em 0 1em;
+  .user {
+    color: #9fabb7
   }
 
   .msg:hover button {
@@ -93,20 +91,50 @@
     text-indent: -9999px;
     cursor: pointer;
   }
+  .avatar {
+    width: 32px;
+    height: 32px;
+    display: inline-block;
+    vertical-align: bottom;
+    margin-right: 2px;
+  }
+
+  .avatar img {
+    background: #ccc;
+    border-radius: 16px;
+    width: 32px;
+    height: 32px;
+  }
+
+  .message-container {
+    display: inline-block;
+    vertical-align: bottom;
+  }
 </style>
 
 {#each chats as chat (chat.id)}
-  <article class:user={chat.sender_type_text === 'visitor'}>
-    <div class="meta">
-      <span class="time">
-        {format(new Date(chat.created_at), 'yyyy-MM-dd HH:mm:ss')}
-      </span>
-      <span class="user">{chat.sender.name}</span>
-    </div>
-    <div
-      class="msg"
-      style="background-color: {chat.user !== $user && toHSL(chat.user)}">
-      {chat.content}
+  <article class:visitor={chat.sender_type_text === 'visitor'}>
+    {#if chat.sender_type_text === 'user'}
+      <div class="avatar">
+        <img src="{chat.sender.avatar}"/>
+      </div>
+    {/if}
+    <div class="message-container">
+      <div class="meta">
+        <!--
+        <span class="time">
+          {format(new Date(chat.created_at), 'yyyy-MM-dd HH:mm:ss')}
+        </span>
+        -->
+        {#if chat.sender_type_text === 'user'}
+          <span class="user">{chat.sender.name}</span>
+        {/if}
+      </div>
+      <div
+        class="msg"
+        style="background-color: {chat.user !== $user && toHSL(chat.user)}">
+        {chat.content}
+      </div>
     </div>
   </article>
 {/each}
