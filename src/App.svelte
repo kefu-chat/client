@@ -32,11 +32,19 @@
   {#if _data}
     <Nav>
       <div class="assistant-info">
-        <div class="assistant-avatar"/>
+        {#if _data.conversation.user}
+          <div class="assistant-avatar"/>
+          <div class="assistant-text">
+            <div class="text-white text-size-15">客服名字</div>
+            <div class="text-white-50 text-size-13">Customer Support</div>
+          </div>
+        {/if}
+        {#if !_data.conversation.user}
         <div class="assistant-text">
-          <div class="text-white text-size-15">客服名字</div>
-          <div class="text-white-50 text-size-13">Customer Support</div>
+          <div class="text-white text-size-15">请输入消息，将自动为您分配客服</div>
+          <div class="text-white-50 text-size-13">客服当前在线，欢迎随时咨询</div>
         </div>
+        {/if}
       </div>
     </Nav>
     <Messages />

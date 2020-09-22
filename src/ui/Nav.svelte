@@ -42,8 +42,6 @@
     background: linear-gradient(95deg, rgb(0, 33, 163) 20%, rgb(0, 110, 255) 80%);
     color: #fff;
     height: 70px;
-    border-top-right-radius: 30px;
-    border-top-left-radius: 10px;
   }
   nav .dot {
     background: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMiIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDMyIDQwIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGZpbGw9IiMxOEMxMzkiIGQ9Ik05IDBjMy41ODEuMDUgMjMgNS40MjYgMjMgMzMuMDh2LjAzQzE4LjkyMiAzMC43NTEgOSAxOS4zMTEgOSA1LjU1NFYweiIvPjwvZz48L3N2Zz4=") no-repeat no-repeat;
