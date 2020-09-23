@@ -10,7 +10,7 @@
 <style>
   div {
     position: fixed;
-    bottom: 4em;
+    bottom: 7em;
     left: 0;
     right: 0;
     margin: 0 auto;
@@ -31,5 +31,7 @@
     border-radius: 50%;
     background-color: #555555;
     opacity: 0.9;
+    width: 45px;
+    height: 45px;
   }
 </style>

@@ -11,7 +11,7 @@
         method: "POST",
         data: { type: 1, content: msgInput },
       });
-      console.log(data);
+      //console.log(data);
     }
   }
 </script>
