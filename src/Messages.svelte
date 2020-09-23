@@ -63,7 +63,7 @@
     const id = localStorage.getItem("conversation_id");
     if (id) {
       const token = localStorage.getItem("visitor_token");
-      const channel = `conversation.${id}.messaging`;
+      const channel = `conversation.${id}`;
       echo = new Echo({
         broadcaster: "socket.io",
         host: request.socketUrl,
