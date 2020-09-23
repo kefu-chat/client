@@ -4,8 +4,26 @@
   import Page from "./ui/Page.svelte";
   import { onMount } from "svelte";
   import request from "./request";
+  import Echo from "laravel-echo";
+
   export let _data = null;
+  export let _user = null;
   const u = new URL(location.href)
+  let echo;
+  let chats = [];
+  
+  function askNotificationPermission() {
+    return new Promise(function(resolve, reject) {
+      const permissionResult = Notification.requestPermission(function(result) {
+        resolve(result);
+      });
+
+      if (permissionResult) {
+        permissionResult.then(resolve, reject);
+      }
+    })
+  }
+  
   onMount(async () => {
     // $nav = "messages";
     const { data } = await request({
@@ -22,26 +40,82 @@
         referer: u.searchParams.get('referer')
       },
     });
-    localStorage.setItem("visitor_token", data.visitor_token);
-    localStorage.setItem("conversation_id", data.conversation.id);
+    const visitor_token = data.visitor_token
+    const conversation_id = data.conversation.id;
+    localStorage.setItem("visitor_token", visitor_token);
+    localStorage.setItem("conversation_id", conversation_id);
     _data = data;
+
+    if (conversation_id) {
+      const channel = `conversation.${conversation_id}`;
+      echo = new Echo({
+        broadcaster: "socket.io",
+        host: request.socketUrl,
+        auth: {
+          headers: {
+            Authorization: `Bearer ${visitor_token}`,
+          },
+        },
+      });
+
+      const { data } = await request({
+        url: `api/conversation/${conversation_id}/messages`,
+        method: "GET",
+      });
+      chats = data.messages;
+      _user = data.conversation.user;
+
+      echo
+        .join(channel)
+        //.here()
+        .joining((user) => _user = user)
+        .leaving((user) => {})
+        .listen(".message.created", (msg) => {
+          chats.push(msg);
+          if (msg.sender_type_text == 'user') {
+            askNotificationPermission().then(() => {
+              let body, image
+              if (msg.type == 1) {
+                body = msg.content
+              }
+              if (msg.type == 2) {
+                body = '[图片消息]'
+                image = msg.content
+              }
+
+              const notify = new Notification('您收到新消息', {
+                body,
+                image,
+                vibrate: true,
+              })
+              notify.onclick = () => {
+                window.focus()
+                setTimeout(() => {
+                  notify.close()
+                }, 200);
+              }
+            });
+          }
+        });
+    }
   });
+
 </script>
 
 <Page>
   {#if _data}
     <Nav>
       <div class="assistant-info">
-        {#if _data.conversation.user}
+        {#if _user}
           <div class="assistant-avatar"/>
           <div class="assistant-text">
-            <div class="text-white text-size-15">{_data.conversation.user.name}</div>
-            {#if _data.conversation.user.title && _data.conversation.user.title.trim()}
-              <div class="text-white-50 text-size-13">{_data.conversation.user.title}</div>
+            <div class="text-white text-size-15">{_user.name}</div>
+            {#if _user.title && _user.title.trim()}
+              <div class="text-white-50 text-size-13">{_user.title}</div>
             {/if}
           </div>
         {/if}
-        {#if !_data.conversation.user}
+        {#if !_user}
         <div class="assistant-text">
           <div class="text-white text-size-15">开始聊天将自动为您分配客服</div>
           <div class="text-white-50 text-size-13">客服当前在线</div>
@@ -49,7 +123,7 @@
         {/if}
       </div>
     </Nav>
-    <Messages />
+    <Messages {chats} />
   {/if}
 </Page>
 

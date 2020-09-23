@@ -5,46 +5,32 @@
   import MessageInput from "./MessageInput.svelte";
   import MessageList from "./MessageList.svelte";
   import Spinner from "./ui/Spinner.svelte";
-  import request from "./request";
-  import Echo from "laravel-echo";
+  export let chats;
 
   const ADD_ON_SCROLL = 50; // messages to add when scrolling to the top
   let showMessages = 100; // initial messages to load
 
   let store = {};
-  let chats = [];
+  //let chats = [];
   let autoscroll;
   let showScrollToBottom;
   let main;
   let isLoading = false;
   let timeout;
-  let echo;
 
   $: {
     // isLoading = true;
-    if (timeout) clearTimeout(timeout);
+    //if (timeout) clearTimeout(timeout);
     // debounce update svelte store to avoid overloading ui
-    timeout = setTimeout(() => {
-      // convert key/value object to sorted array of messages (with a max length)
-      // const arr = Object.values(store);
-      // const sorted = arr.sort((a, b) => a.time - b.time);
-      // const begin = Math.max(0, sorted.length - showMessages);
-      // const end = arr.length;
-      chats = chats;
-      isLoading = false;
-    }, 200);
-  }
-
-  function askNotificationPermission() {
-    return new Promise(function(resolve, reject) {
-      const permissionResult = Notification.requestPermission(function(result) {
-        resolve(result);
-      });
-
-      if (permissionResult) {
-        permissionResult.then(resolve, reject);
-      }
-    })
+    //timeout = setTimeout(() => {
+    //  // convert key/value object to sorted array of messages (with a max length)
+    //  // const arr = Object.values(store);
+    //  // const sorted = arr.sort((a, b) => a.time - b.time);
+    //  // const begin = Math.max(0, sorted.length - showMessages);
+    //  // const end = arr.length;
+    //  chats = chats;
+    //  isLoading = false;
+    //}, 200);
   }
 
   function scrollToBottom() {
@@ -70,61 +56,6 @@
     const now = new Date().getTime();
     const message = { msg, user: $user, time: now };
   }
-
-  onMount(async () => {
-    const id = localStorage.getItem("conversation_id");
-    if (id) {
-      const token = localStorage.getItem("visitor_token");
-      const channel = `conversation.${id}`;
-      echo = new Echo({
-        broadcaster: "socket.io",
-        host: request.socketUrl,
-        auth: {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      });
-      const { data } = await request({
-        url: `api/conversation/${id}/messages`,
-        method: "GET",
-      });
-      chats = data.messages;
-      isLoading = false;
-      echo
-        .join(channel)
-        //.here()
-        .joining(console.log)
-        .leaving(console.log)
-        .listen(".message.created", (msg) => {
-          chats.push(msg);
-          if (msg.sender_type_text == 'user') {
-            askNotificationPermission().then(() => {
-              let body, image
-              if (msg.type == 1) {
-                body = msg.content
-              }
-              if (msg.type == 2) {
-                body = '[图片消息]'
-                image = msg.content
-              }
-
-              const notify = new Notification('您收到新消息', {
-                body,
-                image,
-                vibrate: true,
-              })
-              notify.onclick = () => {
-                window.focus()
-                setTimeout(() => {
-                  notify.close()
-                }, 200);
-              }
-            });
-          }
-        });
-    }
-  });
 
   beforeUpdate(() => {
     autoscroll =
