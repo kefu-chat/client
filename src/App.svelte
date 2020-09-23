@@ -123,18 +123,16 @@
   });
 
   $: {
-    // isLoading = true;
-    //if (timeout) clearTimeout(timeout);
     // debounce update svelte store to avoid overloading ui
-    //timeout = setTimeout(() => {
-    //  // convert key/value object to sorted array of messages (with a max length)
-    //  // const arr = Object.values(store);
-    //  // const sorted = arr.sort((a, b) => a.time - b.time);
-    //  // const begin = Math.max(0, sorted.length - showMessages);
-    //  // const end = arr.length;
-    //  _chats = _chats;
-    //  isLoading = false;
-    //}, 200);
+    timeout = setTimeout(() => {
+      //  // convert key/value object to sorted array of messages (with a max length)
+      //  // const arr = Object.values(store);
+      //  // const sorted = arr.sort((a, b) => a.time - b.time);
+      //  // const begin = Math.max(0, sorted.length - showMessages);
+      //  // const end = arr.length;
+      _chats = _chats;
+      isLoading = false;
+    }, 200);
   }
 
   function scrollToBottom() {
@@ -190,6 +188,7 @@
 
   onDestroy(() => {
     // remove gun listeners
+    clearTimeout(timeout);
   });
 </script>
 
@@ -349,7 +348,9 @@
             </div>
             <div>
               {#if chat.sender_type_text === 'user'}
-                <div class="avatar"><img src={chat.sender.avatar} alt="" /></div>
+                <div class="avatar">
+                  <img src={chat.sender.avatar} alt="" />
+                </div>
               {/if}
               {#if chat.type == 1}
                 <div
