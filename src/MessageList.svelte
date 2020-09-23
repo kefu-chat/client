@@ -64,6 +64,12 @@
     word-break: break-word;
     color: #222d38;
   }
+  .msg.msg-image {
+    padding: 0;
+    border: 0;
+    margin: 0;
+    max-width: 100%;
+  }
 
   .visitor {
     text-align: right;
@@ -130,11 +136,16 @@
           <span class="user">{chat.sender.name}</span>
         {/if}
       </div>
-      <div
-        class="msg"
-        style="background-color: {chat.user !== $user && toHSL(chat.user)}">
-        {chat.content}
-      </div>
+      {#if chat.type == 1}
+        <div
+          class="msg"
+          style="background-color: {chat.user !== $user && toHSL(chat.user)}">
+          {chat.content}
+        </div>
+      {/if}
+      {#if chat.type == 2}
+        <img src="{chat.content}" class="msg msg-image" alt=""/>
+      {/if}
     </div>
   </article>
 {/each}

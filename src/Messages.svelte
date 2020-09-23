@@ -35,6 +35,18 @@
     }, 200);
   }
 
+  function askNotificationPermission() {
+    return new Promise(function(resolve, reject) {
+      const permissionResult = Notification.requestPermission(function(result) {
+        resolve(result);
+      });
+
+      if (permissionResult) {
+        permissionResult.then(resolve, reject);
+      }
+    })
+  }
+
   function scrollToBottom() {
     main.scrollTo({ left: 0, top: main.scrollHeight });
   }
@@ -81,11 +93,35 @@
       isLoading = false;
       echo
         .join(channel)
-        .here()
-        .joining()
-        .leaving()
-        .listen(".message.created", (e) => {
-          chats.push(e);
+        //.here()
+        .joining(console.log)
+        .leaving(console.log)
+        .listen(".message.created", (msg) => {
+          chats.push(msg);
+          if (msg.sender_type_text == 'user') {
+            askNotificationPermission().then(() => {
+              let body, image
+              if (msg.type == 1) {
+                body = msg.content
+              }
+              if (msg.type == 2) {
+                body = '[图片消息]'
+                image = msg.content
+              }
+
+              const notify = new Notification('您收到新消息', {
+                body,
+                image,
+                vibrate: true,
+              })
+              notify.onclick = () => {
+                window.focus()
+                setTimeout(() => {
+                  notify.close()
+                }, 200);
+              }
+            });
+          }
         });
     }
   });
