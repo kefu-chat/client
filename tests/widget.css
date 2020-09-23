@@ -9,6 +9,7 @@
   border-top-right-radius: 30px;
   cursor: pointer;
   overflow: hidden;
+  z-index: 99999;
 }
 
 .kefuchat-opener .kefuchat-kfdesc {
@@ -47,6 +48,7 @@
   bottom: 0;
   right: 90px;
   display: none;
+  z-index: 99999;
 }
 
 .kefuchat-chat .kefuchat-close {
