@@ -4,7 +4,7 @@ var userAgent = navigator.userAgent;
 var language = navigator.language;
 var url = location.href;
 var title = document.title;
-var name = '访客' + unique_id
+var visitorName;
 var referer = document.referrer;
 var unique_id;
 
@@ -20,6 +20,9 @@ if (!unique_id) {
     }
     unique_id = document.cookie.match(/kefuchat_unique_id\=(^[;])/)[1]
   }
+}
+if (!visitorName) {
+  visitorName = '访客' + unique_id
 }
 
 var createDiv = function (__cls) {
@@ -38,7 +41,7 @@ var installDom = function () {
   var iframe = document.createElement('iframe');
   kfdesc.innerText = '客服在线, 来咨询吧'
   iframe.className = 'kefuchat-iframe';
-  iframe.src = widget_origin + '?institution_id=' + institution_id + '&unique_id=' + unique_id + '&userAgent=' + encodeURIComponent(userAgent) + '&languages[]=' + language + '&url=' + encodeURIComponent(url) + '&name=' + encodeURIComponent(name) + '&referer=' + encodeURIComponent(referer);
+  iframe.src = widget_origin + '?institution_id=' + institution_id + '&unique_id=' + unique_id + '&userAgent=' + encodeURIComponent(userAgent) + '&languages[]=' + language + '&url=' + encodeURIComponent(url) + '&name=' + encodeURIComponent(visitorName) + '&referer=' + encodeURIComponent(referer);
 
   opener.style.display = 'none'
   chat.style.display = 'none'
