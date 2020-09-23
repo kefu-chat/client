@@ -8,7 +8,23 @@
 </head>
 
 <body style="margin: 0;">
-  <script type="application/javascript" src="widget.js"></script>
+  <script>
+  var _kechat_init = function () {
+    return {
+      institution_id: 'rxpXD6uDD0EJqvbD',
+      //unique_id: 10086,
+      name: '张三',
+      url: location.href,
+      title: document.title,
+      phone: '010-9919293',
+      email: 'john.three@qq.com'
+    };
+  }
+  // var onloadKefuchat = function () {
+  //   openKefuchat()
+  // }
+  </script>
+  <script type="application/javascript" src="widget.js" async defer></script>
 </body>
 
 </html>

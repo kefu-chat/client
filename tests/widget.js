@@ -1,28 +1,39 @@
-var widget_origin = 'http://localhost:5000';
-var institution_id = 'rxpXD6uDD0EJqvbD';
-var userAgent = navigator.userAgent;
-var language = navigator.language;
-var url = location.href;
-var title = document.title;
-var visitorName;
-var referer = document.referrer;
-var unique_id;
+var conf = {
+  widget_origin: 'http://localhost:5000',
+  institution_id: 'rxpXD6uDD0EJqvbD',
+  userAgent: navigator.userAgent,
+  language: navigator.language,
+  url: location.href,
+  title: document.title,
+  name : null,
+  referer: document.referrer,
+  unique_id : null,
+}
+if ('function' == typeof _kechat_init) {
+  var diy = _kechat_init();
+  for (var i in diy) {
+    if ([diy] != null && 'string' != typeof diy[i] && 'number' != typeof diy[i] ) {
+      throw i + ' must a string'
+    }
+    conf[i] = diy[i]
+  }
+}
 
-if (!unique_id) {
+if (!conf.unique_id) {
   if (localStorage) {
     if (!localStorage.kefuchat_unique_id) {
       localStorage.kefuchat_unique_id = parseInt(Math.random()*99999);
     }
-    unique_id = localStorage.kefuchat_unique_id
+    conf.unique_id = localStorage.kefuchat_unique_id
   } else {
     if (!document.cookie.match(/kefuchat_unique_id\=(^[;])/)) {
       document.cookie = 'kefuchat_unique_id=' + parseInt(Math.random()*99999);
     }
-    unique_id = document.cookie.match(/kefuchat_unique_id\=(^[;])/)[1]
+    conf.unique_id = document.cookie.match(/kefuchat_unique_id\=(^[;])/)[1]
   }
 }
-if (!visitorName) {
-  visitorName = '访客' + unique_id
+if (!conf.name) {
+  conf.name = '访客' + conf.unique_id
 }
 
 var createDiv = function (__cls) {
@@ -41,7 +52,7 @@ var installDom = function () {
   var iframe = document.createElement('iframe');
   kfdesc.innerText = '客服在线, 来咨询吧'
   iframe.className = 'kefuchat-iframe';
-  iframe.src = widget_origin + '?institution_id=' + institution_id + '&unique_id=' + unique_id + '&userAgent=' + encodeURIComponent(userAgent) + '&languages[]=' + language + '&url=' + encodeURIComponent(url) + '&name=' + encodeURIComponent(visitorName) + '&referer=' + encodeURIComponent(referer);
+  iframe.src = conf.widget_origin + '?institution_id=' + conf.institution_id + '&unique_id=' + conf.unique_id + '&userAgent=' + encodeURIComponent(conf.userAgent) + '&languages[]=' + conf.language + '&url=' + encodeURIComponent(conf.url) + '&name=' + encodeURIComponent(conf.name) + '&referer=' + encodeURIComponent(conf.referer);
 
   opener.style.display = 'none'
   chat.style.display = 'none'
@@ -61,17 +72,26 @@ var installCss = function () {
   var css = document.createElement('link');
   css.href = 'widget.css';
   css.rel = 'stylesheet';
-  css.onload = show;
+  css.onload = function () {
+    show();
+    if ('function' == typeof onloadKefuchat) {
+      onloadKefuchat()
+    }
+  };
   document.head.appendChild(css);
 };
 
+window.openKefuchat = function () {
+  document.querySelector('.kefuchat-opener').style.display = 'none'; document.querySelector('.kefuchat-chat').style.display = 'block';
+};
+
+window.closeKefuchat = function () {
+  document.querySelector('.kefuchat-chat').style.display = 'none'; document.querySelector('.kefuchat-opener').style.display = 'block'
+};
+
 var bindEvent = function () {
-  document.querySelector('.kefuchat-opener').addEventListener('click', function () {
-    document.querySelector('.kefuchat-opener').style.display = 'none'; document.querySelector('.kefuchat-chat').style.display = 'block';
-  });
-  document.querySelector('.kefuchat-close').addEventListener('click', function () {
-    document.querySelector('.kefuchat-chat').style.display = 'none'; document.querySelector('.kefuchat-opener').style.display = 'block'
-  });
+  document.querySelector('.kefuchat-opener').addEventListener('click', window.openKefuchat);
+  document.querySelector('.kefuchat-close').addEventListener('click', window.closeKefuchat);
 };
 
 var registerNotification = function () {

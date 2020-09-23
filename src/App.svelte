@@ -227,6 +227,7 @@
     word-break: break-word;
     color: #222d38;
     vertical-align: middle;
+    max-width: calc(100% - 80px);
   }
   .msg.msg-image {
     padding: 0;
@@ -262,6 +263,7 @@
   .message-container {
     display: inline-block;
     vertical-align: middle;
+    width: 100%;
   }
 
   main {
