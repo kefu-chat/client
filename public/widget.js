@@ -1,6 +1,6 @@
 var conf = {
-  widget_origin: 'http://localhost:5000',
-  institution_id: 'rxpXD6uDD0EJqvbD',
+  chat_origin: 'http://localhost:5000',
+  asset_origin: 'http://localhost:5000',
   userAgent: navigator.userAgent,
   language: navigator.language,
   url: location.href,
@@ -52,7 +52,7 @@ var installDom = function () {
   var iframe = document.createElement('iframe');
   kfdesc.innerText = '客服在线, 来咨询吧'
   iframe.className = 'kefuchat-iframe';
-  iframe.src = conf.widget_origin + '?institution_id=' + conf.institution_id + '&unique_id=' + conf.unique_id + '&userAgent=' + encodeURIComponent(conf.userAgent) + '&languages[]=' + conf.language + '&url=' + encodeURIComponent(conf.url) + '&name=' + encodeURIComponent(conf.name) + '&referer=' + encodeURIComponent(conf.referer);
+  iframe.src = conf.chat_origin + '?institution_id=' + conf.institution_id + '&unique_id=' + conf.unique_id + '&userAgent=' + encodeURIComponent(conf.userAgent) + '&languages[]=' + conf.language + '&url=' + encodeURIComponent(conf.url) + '&name=' + encodeURIComponent(conf.name) + '&referer=' + encodeURIComponent(conf.referer);
 
   opener.style.display = 'none'
   chat.style.display = 'none'
@@ -70,7 +70,7 @@ var installDom = function () {
 
 var installCss = function () {
   var css = document.createElement('link');
-  css.href = 'widget.css';
+  css.href = conf.asset_origin + '/widget.css';
   css.rel = 'stylesheet';
   css.onload = function () {
     show();
