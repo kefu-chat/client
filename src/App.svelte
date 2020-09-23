@@ -95,28 +95,7 @@
         .listen(".message.created", (msg) => {
           _chats.push(msg);
           if (msg.sender_type_text == "user") {
-            askNotificationPermission().then(() => {
-              let body, image;
-              if (msg.type == 1) {
-                body = msg.content;
-              }
-              if (msg.type == 2) {
-                body = "[图片消息]";
-                image = msg.content;
-              }
-
-              const notify = new Notification("您收到新消息", {
-                body,
-                image,
-                vibrate: true,
-              });
-              notify.onclick = () => {
-                window.focus();
-                setTimeout(() => {
-                  notify.close();
-                }, 200);
-              };
-            });
+            window.parent.postMessage({action: 'showNotification', msg})
           }
         });
     }

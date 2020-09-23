@@ -95,7 +95,52 @@ var bindEvent = function () {
 };
 
 var registerNotification = function () {
-  // 注册桌面推送通知, 需要 serviceWorker
+  var askNotificationPermission = function () {
+    return new Promise(function (resolve, reject) {
+      const permissionResult = Notification.requestPermission(function (
+        result
+      ) {
+        resolve(result);
+      });
+
+      if (permissionResult) {
+        permissionResult.then(resolve, reject);
+      }
+    });
+  }
+
+  window.addEventListener("message", function (message) {
+    console.log(message);
+    if (message.data.action == 'showNotification') {
+      askNotificationPermission().then(() => {
+        var msg = message.data.msg;
+        var body, image;
+
+        if (msg.type == 1) {
+          body = msg.content;
+        }
+        if (msg.type == 2) {
+          body = "[图片消息]";
+          image = msg.content;
+        }
+
+        var notify = new Notification("您收到新消息", {
+          body,
+          image,
+          vibrate: true,
+        });
+
+        notify.onclick = () => {
+          window.focus();
+          window.openKefuchat();
+
+          setTimeout(() => {
+            notify.close();
+          }, 200);
+        };
+      });
+    }
+  }, false);
 };
 
 var show = function () {
