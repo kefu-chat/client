@@ -27,6 +27,7 @@
   let showScrollToBottom;
   let main;
   let isLoading = false;
+  let typing = false;
   let timeout;
   const ADD_ON_SCROLL = 50; // messages to add when scrolling to the top
   let showMessages = 100; // initial messages to load
@@ -99,11 +100,14 @@
             window.parent.postMessage({action: 'showNotification', msg})
           }
         })
-        .listenForWhisper('typing', (evt) => {
-          console.log(evt)
+        .listenForWhisper('startTyping', (evt) => {
+          typing = true;
+        })
+        .listenForWhisper('stopTyping', (evt) => {
+          typing = false;
         });
 
-      startTyping()
+      //startTyping()
     }
   });
 
@@ -363,6 +367,67 @@
           </div>
         </article>
       {/each}
+
+      {#if typing}
+      <article class="svelte-1wx9mm9">
+        <div class="message-container svelte-1wx9mm9">
+          <div class="meta svelte-1wx9mm9">
+            <span class="user svelte-1wx9mm9">admin</span>
+          </div>
+          <div>
+            <div class="avatar svelte-1wx9mm9">
+              <img src="http://dev.fastsupport.cn/img/default_avatar.svg" alt="" class="svelte-1wx9mm9">
+            </div>
+            <div class="msg" style="padding: 0">
+              <svg xml:space="preserve" viewBox="0 0 100 100" y="0" x="0" xmlns="http://www.w3.org/2000/svg" id="Layer_1" version="1.1" style="height: 60px; width: 70px; background: none; shape-rendering: auto; margin: -6px 0 -23px 0;">
+                <g class="ldl-scale" style="transform-origin: 50% 50%; transform: rotate(0deg) scale(0.6, 0.6);">
+                  <g class="ldl-ani">
+                    <g class="ldl-layer">
+                      <g class="ldl-ani" style="transform-origin: 50px 50px; transform: matrix(1, 0, 0, 1, 0, 0); animation: 1.23457s linear -0.823045s infinite normal forwards running bounce-8f">
+                        <circle fill="#666666" r="10" cy="50" cx="20"></circle>
+                      </g>
+                    </g>
+                    <g class="ldl-layer">
+                      <g class="ldl-ani" style="transform-origin: 50px 50px; transform: matrix(1, 0, 0, 1, 0, 0); animation: 1.23457s linear -1.02881s infinite normal forwards running bounce-8f">
+                        <circle fill="#999999" r="10" cy="50" cx="50"></circle>
+                      </g>
+                    </g>
+                    <g class="ldl-layer">
+                      <g class="ldl-ani" style="transform-origin: 50px 50px; transform: matrix(1, 0, 0, 1, 0, 0); animation: 1.23457s linear -1.23457s infinite normal forwards running bounce-8f">
+                        <circle fill="#cccccc" r="10" cy="50" cx="80"></circle>
+                      </g>
+                    </g>
+                  </g>
+                </g>
+                <style id="bounce-8f">
+                @keyframes bounce-8f{
+                  0% {
+                    animation-timing-function: cubic-bezier(0.1361,0.2514,0.2175,0.8786);
+                    transform: translate(0,0px) scaleY(1);
+                  }
+                  37% {
+                    animation-timing-function: cubic-bezier(0.7674,0.1844,0.8382,0.7157);
+                    transform: translate(0,-20px) scaleY(1);
+                  }
+                  72% {
+                    animation-timing-function: cubic-bezier(0.1118,0.2149,0.2172,0.941);
+                    transform: translate(0,0px) scaleY(1);
+                  }
+                  87% {
+                    animation-timing-function: cubic-bezier(0.7494,0.2259,0.8209,0.6963);
+                    transform: translate(0,10px) scaleY(0.602);
+                  }
+                  100% {
+                    transform: translate(0,0px) scaleY(1);
+                  }
+                }
+                </style>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </article>
+      {/if}
     </main>
 
     <MessageInput
