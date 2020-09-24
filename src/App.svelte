@@ -21,6 +21,7 @@
   export let _chats = [];
 
   let echo;
+  let socket;
   let store = {};
   let autoscroll;
   let showScrollToBottom;
@@ -87,7 +88,7 @@
       _chats = data.messages;
       _user = data.conversation.user;
 
-      echo
+      socket = echo
         .join(channel)
         //.here()
         .joining((user) => (_user = user))
@@ -97,7 +98,12 @@
           if (msg.sender_type_text == "user") {
             window.parent.postMessage({action: 'showNotification', msg})
           }
+        })
+        .listenForWhisper('typing', (evt) => {
+          console.log(evt)
         });
+
+      startTyping()
     }
   });
 
@@ -112,6 +118,18 @@
       _chats = _chats;
       isLoading = false;
     }, 200);
+  }
+
+  function startTyping(evt) {
+    socket.whisper('startTyping', {
+        name: 'test' //this.user.name,
+    })
+  }
+
+  function stopTyping(evt) {
+    socket.whisper('stopTyping', {
+        name: this.user.name,
+    })
   }
 
   function scrollToBottom() {
@@ -349,6 +367,7 @@
 
     <MessageInput
       on:message={(e) => {
+        console.log(e)
         handleNewMessage(e.detail);
         scrollToBottom();
       }} />
