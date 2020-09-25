@@ -9,11 +9,12 @@
 
 <body style="margin: 0; background: #682459;">
   <script>
+  var unique_id = Math.random().toString(20).substr(2, 7);
   var _kechat_init = function () {
     return {
       institution_id: 'rxpXD6uDD0EJqvbD',
-      //unique_id: 10086,
-      name: '张三',
+      unique_id: unique_id,
+      name: unique_id,
       url: location.href,
       title: document.title,
       phone: '010-9919293',
