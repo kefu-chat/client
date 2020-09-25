@@ -1,6 +1,8 @@
 <script>
   import Input from "./ui/Input.svelte";
   import request from "./request";
+  export let visitor;
+  export let socket;
   let msgInput;
 
   function sendMessage() {
@@ -11,7 +13,17 @@
         method: "POST",
         data: { type: 1, content: msgInput },
       });
-      //console.log(data);
+      socket.whisper("message", {
+        type: 1,
+        content: msgInput,
+        id: parseInt((Math.random()*9999999).toString()).toString(),
+        sender_id: visitor.id,
+        sender_type: 'App\\Models\\Visitor',
+        sender_type_text: 'visitor',
+        sender: visitor,
+        created_at: (new Date()).toISOString(),
+        updated_at: (new Date()).toISOString(),
+      });
     }
   }
 </script>

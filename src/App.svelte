@@ -16,6 +16,7 @@
   import { toHSL } from "./toHSL.js";
   import format from "date-fns/format";
 
+  export let visitor = null;
   export let _data = null;
   export let _user = null;
   export let _chats = [];
@@ -67,6 +68,7 @@
     });
     const visitor_token = data.visitor_token;
     const conversation_id = data.conversation.id;
+    visitor = data.conversation.visitor;
     localStorage.setItem("visitor_token", visitor_token);
     localStorage.setItem("conversation_id", conversation_id);
     _data = data;
@@ -95,7 +97,13 @@
         //.here()
         .joining((user) => (_user = user))
         .leaving((user) => {})
-        .listen(".message.created", (msg) => {
+        //.listen(".message.created", (msg) => {
+        //  _chats.push(msg);
+        //  if (msg.sender_type_text == "user") {
+        //    window.parent.postMessage({action: 'showNotification', msg})
+        //  }
+        //})
+        .listenForWhisper("message", (msg) => {
           _chats.push(msg);
           if (msg.sender_type_text == "user") {
             window.parent.postMessage({action: 'showNotification', msg})
@@ -124,6 +132,9 @@
       _chats = _chats;
       isLoading = false;
     }, 200);
+
+    visitor;
+    socket;
   }
 
   function startTyping(evt) {
@@ -433,6 +444,8 @@
     </main>
 
     <MessageInput
+      {visitor}
+      {socket}
       on:message={(e) => {
         console.log(e)
         handleNewMessage(e.detail);
