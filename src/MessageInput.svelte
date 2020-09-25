@@ -34,6 +34,10 @@
       _chats.push(message);
     }
   }
+
+  $: {
+    socket;
+  }
 </script>
 
 <style>
@@ -71,6 +75,8 @@
       bind:value={msgInput}
       name="msg"
       placeholder="输入您的消息"
-      ariaLabel="输入您的消息" />
+      ariaLabel="输入您的消息"
+      {socket}
+      />
   </form>
 </div>

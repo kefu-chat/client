@@ -10,6 +10,7 @@
   export let maxLength = 160;
   export let maxRows = 1;
   export let multiline = false;
+  export let socket = null;
 
   // TODO: kinda hacky, on desktop it's more that 40, but calculating chars per line is hard
   // FIX: something along the lines of this: https://github.com/mui-org/material-ui/blob/master/packages/material-ui/src/TextareaAutosize/TextareaAutosize.js
@@ -24,6 +25,23 @@
 
   $: rows = Math.max(2, calcRows(value));
 
+  function startTyping() {
+    socket.whisper('startTyping', {
+      content: value,
+    })
+  }
+
+  function stopTyping() {
+    socket.whisper('stopTyping', {
+    })
+  }
+
+  function focus() {
+    if (value) {
+      startTyping()
+    }
+  }
+
   function handleKeyPress(e) {
     if (e.which === 13 && !e.shiftKey) {
       // simulate actual submit event when user pressed return
@@ -34,6 +52,12 @@
         })
       );
       e.preventDefault();
+
+      stopTyping()
+    } else {
+
+      const o = this
+      setTimeout(startTyping, 10);
     }
   }
 </script>
@@ -100,6 +124,8 @@
       {name}
       bind:value
       on:keypress={handleKeyPress}
+      on:blur={stopTyping}
+      on:focus={focus}
       aria-labelledby={ariaLabelledBy}
       aria-label={ariaLabel}
       {placeholder} />
