@@ -3,7 +3,12 @@
   import request from "./request";
   export let visitor;
   export let socket;
+  export let _chats;
   let msgInput;
+
+  function whisper(message) {
+    socket.whisper("message", message);
+  }
 
   function sendMessage() {
     const id = localStorage.getItem("conversation_id");
@@ -13,7 +18,7 @@
         method: "POST",
         data: { type: 1, content: msgInput },
       });
-      socket.whisper("message", {
+      const message = {
         type: 1,
         content: msgInput,
         id: parseInt((Math.random()*9999999).toString()).toString(),
@@ -23,7 +28,10 @@
         sender: visitor,
         created_at: (new Date()).toISOString(),
         updated_at: (new Date()).toISOString(),
-      });
+      };
+
+      whisper(message);
+      _chats.push(message);
     }
   }
 </script>

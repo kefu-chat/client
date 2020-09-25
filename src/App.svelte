@@ -135,6 +135,7 @@
 
     visitor;
     socket;
+    _chats;
   }
 
   function startTyping(evt) {
@@ -446,6 +447,7 @@
     <MessageInput
       {visitor}
       {socket}
+      {_chats}
       on:message={(e) => {
         console.log(e)
         handleNewMessage(e.detail);
