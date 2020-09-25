@@ -28,6 +28,7 @@
   let main;
   let isLoading = false;
   let typing = false;
+  let typingUser = null;
   let timeout;
   const ADD_ON_SCROLL = 50; // messages to add when scrolling to the top
   let showMessages = 100; // initial messages to load
@@ -102,6 +103,7 @@
         })
         .listenForWhisper('startTyping', (evt) => {
           typing = true;
+          typingUser = evt;
         })
         .listenForWhisper('stopTyping', (evt) => {
           typing = false;
@@ -233,7 +235,6 @@
     padding: 0;
     border: 0;
     margin: 0;
-    max-width: 100%;
   }
 
   .visitor {
@@ -249,8 +250,9 @@
     width: 32px;
     height: 32px;
     display: inline-block;
-    vertical-align: middle;
+    vertical-align: top;
     margin-right: 2px;
+    margin-top: 4px;
   }
 
   .avatar img {
@@ -372,11 +374,11 @@
       <article class="svelte-1wx9mm9">
         <div class="message-container svelte-1wx9mm9">
           <div class="meta svelte-1wx9mm9">
-            <span class="user svelte-1wx9mm9">admin</span>
+            <span class="user svelte-1wx9mm9">{typingUser.name}</span>
           </div>
           <div>
             <div class="avatar svelte-1wx9mm9">
-              <img src="http://dev.fastsupport.cn/img/default_avatar.svg" alt="" class="svelte-1wx9mm9">
+              <img src={typingUser.avatar} alt="" class="svelte-1wx9mm9">
             </div>
             <div class="msg" style="padding: 0">
               <svg xml:space="preserve" viewBox="0 0 100 100" y="0" x="0" xmlns="http://www.w3.org/2000/svg" id="Layer_1" version="1.1" style="height: 60px; width: 70px; background: none; shape-rendering: auto; margin: -6px 0 -23px 0;">
