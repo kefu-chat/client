@@ -268,7 +268,6 @@
   }
 
   .avatar img {
-    background: #ccc;
     border-radius: 16px;
     width: 32px;
     height: 32px;
