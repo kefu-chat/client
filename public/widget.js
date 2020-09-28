@@ -1,6 +1,6 @@
 var conf = {
-  chat_origin: 'http://localhost:5000',
-  asset_origin: 'http://localhost:5000',
+  chat_origin: location.origin,//'http://localhost:5000',
+  asset_origin: location.origin,//'http://localhost:5000',
   userAgent: navigator.userAgent,
   language: navigator.language,
   url: location.href,
