@@ -95,14 +95,14 @@
       socket = echo
         .join(channel)
         //.here()
-        .joining((user) => (_user = user))
-        .leaving((user) => {})
-        //.listen(".message.created", (msg) => {
-        //  _chats.push(msg);
-        //  if (msg.sender_type_text == "user") {
-        //    window.parent.postMessage({action: 'showNotification', msg})
-        //  }
-        //})
+        //.joining((user) => (_user = user))
+        //.leaving((user) => {})
+        .listen(".conversation.terminated", (msg) => {
+          _chats.push(msg);
+          if (msg.sender_type_text == "user") {
+            window.parent.postMessage({action: 'showNotification', msg})
+          }
+        })
         .listenForWhisper("message", (msg) => {
           _chats.push(msg);
           if (msg.sender_type_text == "user") {
