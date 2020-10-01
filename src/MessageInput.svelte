@@ -12,26 +12,32 @@
 
   function sendMessage() {
     const id = localStorage.getItem("conversation_id");
+    const msg = msgInput;
     if (id) {
-      const { data } = request({
+      request({
         url: `api/conversation/${id}/send-message`,
         method: "POST",
-        data: { type: 1, content: msgInput },
-      });
-      const message = {
-        type: 1,
-        content: msgInput,
-        id: parseInt((Math.random()*9999999).toString()).toString(),
-        sender_id: visitor.id,
-        sender_type: 'App\\Models\\Visitor',
-        sender_type_text: 'visitor',
-        sender: visitor,
-        created_at: (new Date()).toISOString(),
-        updated_at: (new Date()).toISOString(),
-      };
+        data: { type: 1, content: msg },
+      }).then(({success, data}) => {
+        if (!success) {
+          return;
+        }
 
-      whisper(message);
-      _chats.push(message);
+        const message = {
+          type: 1,
+          content: msg,
+          id: parseInt((Math.random()*9999999).toString()).toString(),
+          sender_id: visitor.id,
+          sender_type: 'App\\Models\\Visitor',
+          sender_type_text: 'visitor',
+          sender: visitor,
+          created_at: (new Date()).toISOString(),
+          updated_at: (new Date()).toISOString(),
+        };
+
+        whisper(message);
+        _chats.push(message);
+      });
     }
   }
 
