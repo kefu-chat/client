@@ -75,6 +75,8 @@
         https://stackoverflow.com/questions/7695945/height-of-textarea-does-not-match-the-rows-in-firefox */
     overflow-x: hidden;
     border: 0;
+    background-color: transparent;
+    background: transparent;
   }
 
   .input:disabled {

@@ -20,6 +20,7 @@
   export let _data = null;
   export let _user = null;
   export let _chats = [];
+  export let textareaClass = "";
 
   let echo;
   let socket;
@@ -91,6 +92,9 @@
       });
       _chats = data.messages;
       _user = data.conversation.user;
+      if (!data.conversation.status) {
+        textareaClass = 'disabled';
+      }
 
       socket = echo
         .join(channel)
@@ -98,6 +102,7 @@
         //.joining((user) => (_user = user))
         //.leaving((user) => {})
         .listen(".conversation.terminated", (msg) => {
+          textareaClass = 'disabled';
           _chats.push(msg);
           if (msg.sender_type_text == "user") {
             window.parent.postMessage({action: 'showNotification', msg})
@@ -136,6 +141,7 @@
     visitor;
     socket;
     _chats;
+    textareaClass;
   }
 
   function startTyping(evt) {
@@ -444,6 +450,7 @@
     </main>
 
     <MessageInput
+      {textareaClass}
       {visitor}
       {socket}
       {_chats}

@@ -4,6 +4,7 @@
   export let visitor;
   export let socket;
   export let _chats;
+  export let textareaClass;
   let msgInput;
 
   function whisper(message) {
@@ -63,26 +64,43 @@
     padding: 0.25em 1em;
     border-top: 1px solid #d8dee3;
   }
+
+  .disabled, .disabled form {
+    background-color: #eee;
+    height: 94px;
+    padding: 15px;
+    border-top: 1px solid #ccc;
+  }
+
+  .disabled .tips {
+    font-size: 14px;
+    position: relative;
+  }
 </style>
 
-<div>
-  <form
-    class="msg-send-form"
-    autocomplete="off"
-    on:submit|preventDefault={(e) => {
-      if (!msgInput || !msgInput.trim()) return;
-      sendMessage();
-      msgInput = '';
-      e.target.msg.focus();
-    }}>
-    <Input
-      multiline
-      maxRows={3}
-      bind:value={msgInput}
-      name="msg"
-      placeholder="输入您的消息"
-      ariaLabel="输入您的消息"
-      {socket}
-      />
-  </form>
+<div class="{textareaClass}">
+  {#if textareaClass !='disabled'}
+    <form
+      class="msg-send-form"
+      autocomplete="off"
+      on:submit|preventDefault={(e) => {
+        if (!msgInput || !msgInput.trim()) return;
+        sendMessage();
+        msgInput = '';
+        e.target.msg.focus();
+      }}>
+      <Input
+        multiline
+        maxRows={3}
+        bind:value={msgInput}
+        name="msg"
+        placeholder="输入您的消息"
+        ariaLabel="输入您的消息"
+        {socket}
+        />
+    </form>
+  {/if}
+  {#if textareaClass == 'disabled'}
+    <div class="tips">本次服务已结束, 若您仍有需要咨询的问题, 欢迎再次<a href="">发起咨询</a>.</div>
+  {/if}
 </div>
