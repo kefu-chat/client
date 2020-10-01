@@ -5,7 +5,12 @@
   export let socket;
   export let _chats;
   export let textareaClass;
+  export let init;
   let msgInput;
+
+  function reinit () {
+    init(true)
+  }
 
   function whisper(message) {
     socket.whisper("message", message);
@@ -101,6 +106,6 @@
     </form>
   {/if}
   {#if textareaClass == 'disabled'}
-    <div class="tips">本次服务已结束, 若您仍有需要咨询的问题, 欢迎再次<a href="">发起咨询</a>.</div>
+    <div class="tips">本次服务已结束, 若您仍有需要咨询的问题, 欢迎再次<a on:click={(e) => reinit()}>发起咨询</a>.</div>
   {/if}
 </div>

@@ -51,7 +51,7 @@
     });
   }
 
-  onMount(async () => {
+  export let init = async function(reopen = false) {
     // $nav = "messages";
     const { data } = await request({
       url: `api/visitor/init`,
@@ -65,6 +65,7 @@
         title: u.searchParams.get("title"), //document.title,
         name: u.searchParams.get("name"), //"visitor001",
         referer: u.searchParams.get("referer"),
+        reopen,
       },
     });
     const visitor_token = data.visitor_token;
@@ -94,6 +95,8 @@
       _user = data.conversation.user;
       if (!data.conversation.status) {
         textareaClass = 'disabled';
+      } else {
+        textareaClass = '';
       }
 
       socket = echo
@@ -124,7 +127,9 @@
 
       //startTyping()
     }
-  });
+  };
+
+  onMount(init);
 
   $: {
     // debounce update svelte store to avoid overloading ui
@@ -142,6 +147,7 @@
     socket;
     _chats;
     textareaClass;
+    init;
   }
 
   function startTyping(evt) {
@@ -453,6 +459,7 @@
       {textareaClass}
       {visitor}
       {socket}
+      {init}
       {_chats}
       on:message={(e) => {
         console.log(e)
