@@ -5,7 +5,7 @@
   "scripts": {
     "build": "rollup -c && workbox injectManifest workbox-config.js",
     "dev": "webpack && rollup -c -w",
-    "widget": "webpack",
+    "widget": "webpack && cp src/widget.css public/build/ && cp public/demo.html public/build/ && cp src/widget.css public/",
     "start": "sirv public"
   },
   "devDependencies": {
