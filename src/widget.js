@@ -185,3 +185,4 @@ let kefu = {
 };
 
 kefu.chat.load();
+window.kefu = kefu;
