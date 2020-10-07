@@ -5,6 +5,7 @@ import commonjs from "@rollup/plugin-commonjs";
 import livereload from "rollup-plugin-livereload";
 import { terser } from "rollup-plugin-terser";
 import pkg from "./package.json";
+import 'dotenv/config';
 
 const commitHash = require("child_process")
   .execSync('git log --pretty=format:"%h" -n1')
@@ -33,6 +34,9 @@ export default {
   plugins: [
     replace({
       "process.browser": true,
+      API_URL: JSON.stringify(process.env.API_URL),
+      WIDGET_URL: JSON.stringify(process.env.WIDGET_URL),
+      SOCKET_HOST: JSON.stringify(process.env.SOCKET_HOST),
       ...vars,
     }),
     svelte({

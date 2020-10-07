@@ -4,7 +4,8 @@
   "license": "MIT",
   "scripts": {
     "build": "rollup -c && workbox injectManifest workbox-config.js",
-    "dev": "rollup -c -w",
+    "dev": "webpack && rollup -c -w",
+    "widget": "webpack",
     "start": "sirv public"
   },
   "devDependencies": {
@@ -23,9 +24,15 @@
   },
   "dependencies": {
     "axios": "^0.20.0",
+    "babel-loader": "^8.1.0",
     "date-fns": "^2.16.1",
+    "dotenv": "^8.2.0",
+    "dotenv-webpack": "^3.0.0",
+    "fs": "0.0.1-security",
     "gun": "0.2020.116",
     "laravel-echo": "^1.8.1",
-    "sirv-cli": "^0.4.4"
+    "sirv-cli": "^0.4.4",
+    "webpack": "^4.44.2",
+    "webpack-cli": "^3.3.12"
   }
 }

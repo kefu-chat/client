@@ -107,3 +107,6 @@ dist
 
 public/build
 package-lock.json
+
+# Env
+.env

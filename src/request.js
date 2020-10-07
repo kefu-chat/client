@@ -3,8 +3,9 @@ import axios from "axios";
 const request = axios.create({
   timeout: 5000,
 });
-request.baseUrl = `http://dev.fastsupport.cn/`;
-request.socketUrl = `http://dev.fastsupport.cn:6001/`;
+
+request.baseUrl = API_URL;
+request.socketUrl = SOCKET_HOST;
 
 request.interceptors.request.use(
   async (config) => {
