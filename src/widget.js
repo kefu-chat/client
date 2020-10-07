@@ -1,10 +1,10 @@
 let kefu = {
   chat: {
     init: (conf) => {
-      let _kechat_init = (window)._kechat_init;
+      let _kefuchat_init = (window)._kefuchat_init;
 
-      if (_kechat_init && 'function' == typeof _kechat_init) {
-        let diy = _kechat_init();
+      if (_kefuchat_init && 'function' == typeof _kefuchat_init) {
+        let diy = _kefuchat_init();
         for (let i in diy) {
           if ([diy] != null && 'string' != typeof diy[i] && 'number' != typeof diy[i]) {
             throw i + ' must a string'
