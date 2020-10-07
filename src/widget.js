@@ -1,6 +1,7 @@
 let kefu = {
   chat: {
-    init: (conf) => {
+    options: {},
+    init: function(conf) {
       let _kefuchat_init = (window)._kefuchat_init;
 
       if (_kefuchat_init && 'function' == typeof _kefuchat_init) {
@@ -13,22 +14,26 @@ let kefu = {
         }
       }
 
-      if (!conf.unique_id) {
+      for (let j in conf) {
+        this.options[j] = conf[j];
+      }
+
+      if (!this.options.unique_id) {
         if (localStorage) {
           if (!localStorage.kefuchat_unique_id) {
             localStorage.kefuchat_unique_id = parseInt((Math.random() * 99999).toString());
           }
-          conf.unique_id = localStorage.kefuchat_unique_id
+          this.options.unique_id = localStorage.kefuchat_unique_id
         } else {
           if (!document.cookie.match(/kefuchat_unique_id\=(^[;])/)) {
             document.cookie = 'kefuchat_unique_id=' + parseInt((Math.random() * 99999).toString());
           }
-          conf.unique_id = document.cookie.match(/kefuchat_unique_id\=(^[;])/)[1]
+          this.options.unique_id = document.cookie.match(/kefuchat_unique_id\=(^[;])/)[1]
         }
       }
 
-      if (!conf.name) {
-        conf.name = '访客' + conf.unique_id;
+      if (!this.options.name) {
+        this.options.name = '访客' + this.options.unique_id;
       }
 
       let createDiv = (__cls) => {
@@ -47,7 +52,7 @@ let kefu = {
         let iframe = document.createElement('iframe');
         kfdesc.innerText = '客服在线, 来咨询吧'
         iframe.className = 'kefuchat-iframe';
-        iframe.src = (conf).chat_origin + '?institution_id=' + (conf).institution_id + '&unique_id=' + (conf).unique_id + '&userAgent=' + encodeURIComponent((conf).userAgent) + '&languages[]=' + (conf).language + '&url=' + encodeURIComponent((conf).url) + '&name=' + encodeURIComponent((conf).name) + '&referer=' + encodeURIComponent((conf).referer);
+        iframe.src = this.options.chat_origin + '?institution_id=' + this.options.institution_id + '&unique_id=' + this.options.unique_id + '&userAgent=' + encodeURIComponent(this.options.userAgent) + '&languages[]=' + this.options.language + '&url=' + encodeURIComponent(this.options.url) + '&name=' + encodeURIComponent(this.options.name) + '&referer=' + encodeURIComponent(this.options.referer);
 
         opener.style.display = 'none'
         chat.style.display = 'none'
@@ -65,7 +70,7 @@ let kefu = {
 
       let installCss = () => {
         let css = document.createElement('link');
-        css.href = conf.asset_origin + '/widget.css';
+        css.href = this.options.asset_origin + '/widget.css';
         css.rel = 'stylesheet';
         css.onload = function () {
           show();
@@ -151,12 +156,12 @@ let kefu = {
       let conf = {
         chat_origin: WIDGET_URL,
         asset_origin: WIDGET_URL,
-        userAgent: (navigator).userAgent,
-        language: (navigator).language,
-        url: (location).href,
-        title: (document).title,
+        userAgent: window.navigator.userAgent,
+        language: window.navigator.language,
+        url: window.location.href,
+        title: window.document.title,
         name: null,
-        referer: (document).referrer,
+        referer: window.document.referrer,
         unique_id: null,
       };
 
@@ -167,12 +172,12 @@ let kefu = {
       let conf = {
         chat_origin: WIDGET_URL,
         asset_origin: WIDGET_URL,
-        userAgent: (navigator).userAgent,
-        language: (navigator).language,
-        url: (location).href,
-        title: (document).title,
+        userAgent: window.navigator.userAgent,
+        language: window.navigator.language,
+        url: window.location.href,
+        title: document.title,
         name: null,
-        referer: (document).referrer,
+        referer: document.referrer,
         unique_id: null,
       };
       for (let i in info) {
