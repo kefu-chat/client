@@ -1,4 +1,4 @@
-export let kefu = {
+let kefu = {
   chat: {
     init: (conf) => {
       let _kechat_init = (window)._kechat_init;

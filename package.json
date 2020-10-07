@@ -3,9 +3,9 @@
   "version": "0.9.0",
   "license": "MIT",
   "scripts": {
-    "build": "rollup -c && workbox injectManifest workbox-config.js",
-    "dev": "webpack && rollup -c -w",
-    "widget": "webpack && cp src/widget.css public/build/ && cp public/demo.html public/build/ && cp src/widget.css public/",
+    "build": "npm run widget && rollup -c && workbox injectManifest workbox-config.js",
+    "dev": "npm run widget && rollup -c -w",
+    "widget": "webpack --optimize-minimize --mode production && cp src/widget.css public/build/ && cp public/demo.html public/build/ && cp src/widget.css public/",
     "start": "sirv public"
   },
   "devDependencies": {

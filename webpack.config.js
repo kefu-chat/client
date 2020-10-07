@@ -19,11 +19,20 @@ module.exports = {
       WIDGET_URL: JSON.stringify(process.env.WIDGET_URL),
       SOCKET_HOST: JSON.stringify(process.env.SOCKET_HOST),
     }),
+    new UglifyJsPlugin({
+      sourceMap: true,
+      test: /\.js(\?.*)?$/i,
+      parallel: 3,
+    }),
   ],
   optimization: {
-    minimizer: [new UglifyJsPlugin({
-      sourceMap: true,
-    })],
+    minimizer: [
+      new UglifyJsPlugin({
+        sourceMap: true,
+        test: /\.js(\?.*)?$/i,
+        parallel: 3,
+      })
+    ],
   },
   module: {
     rules: [
