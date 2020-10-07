@@ -1,4 +1,5 @@
 const path = require('path');
+const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const webpack = require('webpack');
 require('dotenv').config();
 
@@ -19,6 +20,11 @@ module.exports = {
       SOCKET_HOST: JSON.stringify(process.env.SOCKET_HOST),
     }),
   ],
+  optimization: {
+    minimizer: [new UglifyJsPlugin({
+      sourceMap: true,
+    })],
+  },
   module: {
     rules: [
       {
@@ -26,7 +32,10 @@ module.exports = {
         exclude: "/node_modules/",
         loader: "babel-loader",
         options: {
-          presets: []
+          presets: ["es2015"],
+          plugins: [
+            "transform-es2015-modules-amd"
+          ]
         }
       }
     ]
