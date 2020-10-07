@@ -106,6 +106,8 @@ dist
 .DS_Store
 
 public/build
+public/widget.js
+public/widget.css
 package-lock.json
 
 # Env
