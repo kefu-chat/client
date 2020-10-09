@@ -7,7 +7,7 @@ let kefu = {
       if (_kefuchat_init && 'function' == typeof _kefuchat_init) {
         let diy = _kefuchat_init();
         for (let i in diy) {
-          if ([diy] != null && 'string' != typeof diy[i] && 'number' != typeof diy[i]) {
+          if (diy[i] != null && 'string' != typeof diy[i] && 'number' != typeof diy[i]) {
             throw i + ' must a string'
           }
           conf[i] = diy[i]
