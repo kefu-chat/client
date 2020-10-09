@@ -108,6 +108,8 @@ dist
 public/build
 public/widget.js
 public/widget.css
+public/widget_*
+public/webpack-assets.json
 package-lock.json
 
 # Env
