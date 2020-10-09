@@ -1,4 +1,5 @@
 <script>
+  import io from 'socket.io-client';
   import Nav from "./ui/Nav.svelte";
   import Page from "./ui/Page.svelte";
   import request from "./request";
@@ -35,21 +36,7 @@
   const ADD_ON_SCROLL = 50; // messages to add when scrolling to the top
   let showMessages = 100; // initial messages to load
 
-  const u = new URL(location.href);
-
-  function askNotificationPermission() {
-    return new Promise(function (resolve, reject) {
-      const permissionResult = Notification.requestPermission(function (
-        result
-      ) {
-        resolve(result);
-      });
-
-      if (permissionResult) {
-        permissionResult.then(resolve, reject);
-      }
-    });
-  }
+  window.io = io;
 
   export let init = async function(reopen = false) {
     // $nav = "messages";
@@ -57,14 +44,15 @@
       url: `api/visitor/init`,
       method: "POST",
       data: {
-        institution_id: u.searchParams.get("institution_id"), //"rxpXD6uDD0EJqvbD",
-        unique_id: u.searchParams.get("unique_id"), //parseInt(Math.random()*9999999).toString(),
-        userAgent: u.searchParams.get("userAgent"), //navigator.userAgent,
-        languages: [u.searchParams.get("languages[]")], //navigator.languages,
-        url: u.searchParams.get("url"), //location.href,
-        title: u.searchParams.get("title"), //document.title,
-        name: u.searchParams.get("name"), //"visitor001",
-        referer: u.searchParams.get("referer"),
+        ...window.parameters,
+        // institution_id: window.parameters.institution_id, //"rxpXD6uDD0EJqvbD",
+        // unique_id: window.parameters.unique_id, //parseInt(Math.random()*9999999).toString(),
+        // userAgent: window.parameters.userAgent, //navigator.userAgent,
+        // languages: window.parameters.languages, //navigator.languages,
+        // url: window.parameters.url, //location.href,
+        // title: window.parameters.title, //document.title,
+        // name: window.parameters.name, //"visitor001",
+        // referer: window.parameters.referer,
         reopen,
       },
     });

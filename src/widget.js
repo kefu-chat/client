@@ -43,29 +43,62 @@ let kefu = {
       }
       let installDom = () => {
         let container = createDiv('kefuchat');
+        document.body.appendChild(container);
+
         let chat = createDiv('kefuchat-chat');
+        container.appendChild(chat);
+
         let close = createDiv('kefuchat-close');
+        chat.appendChild(close);
+
         let opener = createDiv('kefuchat-opener');
+        container.appendChild(opener);
+
         let kfdesc = createDiv('kefuchat-kfdesc');
         let logo = createDiv('kefuchat-logo');
         let badge = createDiv('kefuchat-badge');
         let iframe = document.createElement('iframe');
+        chat.appendChild(iframe);
         kfdesc.innerText = '客服在线, 来咨询吧'
         iframe.className = 'kefuchat-iframe';
-        iframe.src = this.options.chat_origin + '?institution_id=' + this.options.institution_id + '&unique_id=' + this.options.unique_id + '&userAgent=' + encodeURIComponent(this.options.userAgent) + '&languages[]=' + this.options.language + '&url=' + encodeURIComponent(this.options.url) + '&name=' + encodeURIComponent(this.options.name) + '&referer=' + encodeURIComponent(this.options.referer);
+        //iframe.src = this.options.chat_origin + '?institution_id=' + this.options.institution_id + '&unique_id=' + this.options.unique_id + '&userAgent=' + encodeURIComponent(this.options.userAgent) + '&languages[]=' + this.options.language + '&url=' + encodeURIComponent(this.options.url) + '&name=' + encodeURIComponent(this.options.name) + '&referer=' + encodeURIComponent(this.options.referer);
+        let initIframeDom = () => {
+          iframe.contentDocument.writeln(['<!DOCTYPE html>',
+            '<html lang="en">',
+            '<head>',
+            '<meta charset="utf-8" />',
+            '<meta name="viewport" content="width=device-width,initial-scale=1" />',
+            '<meta name="theme-color" content="#ffffff" />',
+            '<meta name="apple-mobile-web-app-capable" content="yes" />',
+            '<meta name="apple-mobile-web-app-status-bar-style" />',
+            '<meta name="theme-color" content="#ffffff" />',
+            '<title>对话</title>',
+            '<link href="' + this.options.asset_origin + 'manifest.json" rel="manifest" />',
+            '<link rel="icon" type="image/png" href="' + this.options.asset_origin + 'favicon.png" />',
+            '<link rel="stylesheet" href="' + this.options.asset_origin + 'global.css" />',
+            '<link rel="stylesheet" href="' + this.options.asset_origin + 'build/bundle.css" />',
+            '<script>',
+            'window.parameters = ' + JSON.stringify(this.options) + ';',
+            '</script>',
+            '</head>',
+            '<body>',
+            '<p class="loading-bundle"> Loading bundle... You need JavaScript for this. <div class="centered">',
+            '<div class="loadingspinner">',
+            '</div>',
+            '</p>',
+            '<script async src="' + this.options.asset_origin + 'build/bundle.js"></script>',
+            '</body>',
+            '</html>'
+          ].join(''));
+        };
+        initIframeDom();
 
         opener.style.display = 'none'
         chat.style.display = 'none'
 
-        chat.appendChild(close);
-        chat.appendChild(iframe);
         opener.appendChild(kfdesc);
         opener.appendChild(logo);
         opener.appendChild(badge);
-        container.appendChild(opener);
-        container.appendChild(chat);
-
-        document.body.appendChild(container);
       }
 
       let installCss = () => {
@@ -157,7 +190,7 @@ let kefu = {
         chat_origin: WIDGET_URL,
         asset_origin: WIDGET_URL,
         userAgent: window.navigator.userAgent,
-        language: window.navigator.language,
+        languages: window.navigator.languages,
         url: window.location.href,
         title: window.document.title,
         name: null,
@@ -173,7 +206,7 @@ let kefu = {
         chat_origin: WIDGET_URL,
         asset_origin: WIDGET_URL,
         userAgent: window.navigator.userAgent,
-        language: window.navigator.language,
+        languages: window.navigator.languages,
         url: window.location.href,
         title: document.title,
         name: null,

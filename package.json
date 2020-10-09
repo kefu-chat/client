@@ -38,6 +38,7 @@
     "gun": "0.2020.116",
     "laravel-echo": "^1.8.1",
     "sirv-cli": "^0.4.4",
+    "socket.io-client": "^2.3.1",
     "uglify-js": "^3.11.0",
     "uglifyjs-webpack-plugin": "^2.2.0",
     "webpack": "^4.44.2",
