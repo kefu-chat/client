@@ -2,21 +2,23 @@ import axios from "axios";
 
 const request = axios.create({
   timeout: 5000,
+  baseURL: API_URL,
+  proxy: {
+    host: '127.0.0.1',
+    port: 8888,
+    protocol: 'http',
+  },
 });
-
-request.baseUrl = API_URL;
-request.socketUrl = SOCKET_HOST;
 
 request.interceptors.request.use(
   async (config) => {
-    const baseUrl = request.baseUrl;
-    config.baseURL = baseUrl;
     const token = localStorage.getItem("visitor_token");
     if (token) {
       config.headers = {
         Authorization: "Bearer " + token,
       };
     }
+    Promise.resolve(config);
     return config;
   },
   (error) => {
@@ -29,6 +31,7 @@ request.interceptors.response.use(
     const data = response.data || {};
     if (data.Status !== 200) {
     }
+    Promise.resolve(data);
     return data;
   },
   (err) => {

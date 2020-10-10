@@ -9,7 +9,7 @@ const app = new App({
 const production = process.env.NODE_ENV === "production";
 // Check that service workers are supported
 // only load in production
-if ("serviceWorker" in navigator) {
+if (false && "serviceWorker" in navigator) {
   // Use the window load event to keep the page load performant
   window.addEventListener("load", () => {
     return;

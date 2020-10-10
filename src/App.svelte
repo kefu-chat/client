@@ -65,11 +65,10 @@
 
     if (conversation_id) {
       setTimeout(async () => {
-        
         const channel = `conversation.${conversation_id}`;
         echo = new Echo({
           broadcaster: "socket.io",
-          host: request.socketUrl,
+          host: SOCKET_HOST,
           auth: {
             headers: {
               Authorization: `Bearer ${visitor_token}`,

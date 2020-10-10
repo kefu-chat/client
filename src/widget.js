@@ -115,7 +115,7 @@ let kefu = {
 
       let installCss = () => {
         let css = document.createElement('link');
-        css.href = this.options.asset_origin + '/widget.css';
+        css.href = this.options.asset_origin + 'widget.css';
         css.rel = 'stylesheet';
         css.onload = function () {
           show();

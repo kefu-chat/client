@@ -19,6 +19,9 @@ const vars = {
   "process.env.NODE_ENV": JSON.stringify(mode),
   "process.env.COMMIT_HASH": JSON.stringify(commitHash),
   "process.env.APP_VERSION": JSON.stringify(pkg.version),
+  API_URL: JSON.stringify(process.env.API_URL),
+  WIDGET_URL: JSON.stringify(process.env.WIDGET_URL),
+  SOCKET_HOST: JSON.stringify(process.env.SOCKET_HOST),
 };
 
 const production = mode === "production";
@@ -29,7 +32,7 @@ export default {
     sourcemap: false,
     format: "iife",
     name: "app",
-    file: "public/build/bundle.js",
+    file: (production ? "public/build/" : "public/") + "bundle.js",
   },
   plugins: [
     babel({
@@ -38,9 +41,6 @@ export default {
     }),
     replace({
       "process.browser": true,
-      API_URL: JSON.stringify(process.env.API_URL),
-      WIDGET_URL: JSON.stringify(process.env.WIDGET_URL),
-      SOCKET_HOST: JSON.stringify(process.env.SOCKET_HOST),
       ...vars,
     }),
     svelte({
@@ -49,7 +49,7 @@ export default {
       // we'll extract any component CSS out into
       // a separate file - better for performance
       css: (css) => {
-        css.write("public/build/bundle.css");
+        css.write((production ? "public/build/" : "public/") + "/bundle.css");
       },
     }),
 
