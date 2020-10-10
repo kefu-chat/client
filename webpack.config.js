@@ -10,7 +10,8 @@ module.exports = {
   entry: './src/widget.js',
   output: {
     path: path.resolve(__dirname, process.env.APP_ENV === 'production' ? 'public/build' : 'public'),
-    filename: 'widget_[contenthash:6].js',
+    filename: 'widget.js',
+    //filename: 'widget_[contenthash:6].js',
     publicPath: '/',
   },
   node: {

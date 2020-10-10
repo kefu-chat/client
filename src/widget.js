@@ -76,7 +76,7 @@ let kefu = {
             '<link href="' + this.options.asset_origin + 'manifest.json" rel="manifest" />',
             '<link rel="icon" type="image/png" href="' + this.options.asset_origin + 'favicon.png" />',
             '<link rel="stylesheet" href="' + this.options.asset_origin + 'global.css" />',
-            '<link rel="stylesheet" href="' + this.options.asset_origin + 'build/bundle.css" />',
+            '<link rel="stylesheet" href="' + this.options.asset_origin + 'bundle.css" />',
             '<script>',
             'window.parameters = ' + JSON.stringify(this.options) + ';',
             '</script>',
@@ -86,7 +86,7 @@ let kefu = {
             '<div class="loadingspinner">',
             '</div>',
             '</p>',
-            '<script async src="' + this.options.asset_origin + 'build/bundle.js"></script>',
+            '<script async src="' + this.options.asset_origin + 'bundle.js"></script>',
             '</body>',
             '</html>'
           ].join(''));
