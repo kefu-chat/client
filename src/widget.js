@@ -36,11 +36,24 @@ let kefu = {
         this.options.name = '访客' + this.options.unique_id;
       }
 
+      let askNotificationPermission = () => {
+        return new Promise((resolve, reject) => {
+          const permissionResult = Notification.requestPermission((result) => {
+            resolve(result);
+          });
+
+          if (permissionResult) {
+            permissionResult.then(resolve, reject);
+          }
+        });
+      }
       let createDiv = (__cls) => {
+
         let div = document.createElement('div');
         div.className = __cls;
         return div;
       }
+
       let installDom = () => {
         let container = createDiv('kefuchat');
         document.body.appendChild(container);
@@ -128,18 +141,6 @@ let kefu = {
       };
 
       let registerNotification = () => {
-        let askNotificationPermission = () => {
-          return new Promise((resolve, reject) => {
-            const permissionResult = Notification.requestPermission((result) => {
-              resolve(result);
-            });
-
-            if (permissionResult) {
-              permissionResult.then(resolve, reject);
-            }
-          });
-        }
-
         window.addEventListener("message", (message) => {
           console.log(message);
           if (message.data.action == 'showNotification') {
