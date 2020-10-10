@@ -106,6 +106,6 @@
     </form>
   {/if}
   {#if textareaClass == 'disabled'}
-    <div class="tips">本次服务已结束, 若您仍有需要咨询的问题, 欢迎再次<a on:click={(e) => reinit()}>发起咨询</a>.</div>
+    <div class="tips">本次服务已结束, 若您仍有需要咨询的问题, 欢迎再次<span role="link" on:click={(e) => reinit()}>发起咨询</span>.</div>
   {/if}
 </div>
