@@ -73,7 +73,6 @@ let kefu = {
             '<meta name="apple-mobile-web-app-status-bar-style" />',
             '<meta name="theme-color" content="#ffffff" />',
             '<title>对话</title>',
-            '<link href="' + this.options.asset_origin + 'manifest.json" rel="manifest" />',
             '<link rel="icon" type="image/png" href="' + this.options.asset_origin + 'favicon.png" />',
             '<link rel="stylesheet" href="' + this.options.asset_origin + 'global.css" />',
             '<link rel="stylesheet" href="' + this.options.asset_origin + 'bundle.css" />',
