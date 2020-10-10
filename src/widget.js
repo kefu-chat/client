@@ -114,6 +114,7 @@ let kefu = {
       };
 
       (window).openKefuchat = () => {
+        askNotificationPermission().then(() => {});
         (document.querySelector('.kefuchat-opener')).style.display = 'none'; (document.querySelector('.kefuchat-chat')).style.display = 'block';
       };
 

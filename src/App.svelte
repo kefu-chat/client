@@ -64,56 +64,59 @@
     _data = data;
 
     if (conversation_id) {
-      const channel = `conversation.${conversation_id}`;
-      echo = new Echo({
-        broadcaster: "socket.io",
-        host: request.socketUrl,
-        auth: {
-          headers: {
-            Authorization: `Bearer ${visitor_token}`,
+      setTimeout(async () => {
+        
+        const channel = `conversation.${conversation_id}`;
+        echo = new Echo({
+          broadcaster: "socket.io",
+          host: request.socketUrl,
+          auth: {
+            headers: {
+              Authorization: `Bearer ${visitor_token}`,
+            },
           },
-        },
-      });
-
-      const { data } = await request({
-        url: `api/conversation/${conversation_id}/messages`,
-        method: "GET",
-      });
-      _chats = data.messages;
-      _user = data.conversation.user;
-      if (!data.conversation.status) {
-        textareaClass = 'disabled';
-      } else {
-        textareaClass = '';
-      }
-
-      socket = echo
-        .join(channel)
-        //.here()
-        //.joining((user) => (_user = user))
-        //.leaving((user) => {})
-        .listen(".conversation.terminated", (msg) => {
-          textareaClass = 'disabled';
-          _chats.push(msg);
-          if (msg.sender_type_text == "user") {
-            window.parent.postMessage({action: 'showNotification', msg})
-          }
-        })
-        .listenForWhisper("message", (msg) => {
-          _chats.push(msg);
-          if (msg.sender_type_text == "user") {
-            window.parent.postMessage({action: 'showNotification', msg})
-          }
-        })
-        .listenForWhisper('startTyping', (evt) => {
-          typing = true;
-          typingUser = evt;
-        })
-        .listenForWhisper('stopTyping', (evt) => {
-          typing = false;
         });
 
-      //startTyping()
+        const { data } = await request({
+          url: `api/conversation/${conversation_id}/messages`,
+          method: "GET",
+        });
+        _chats = data.messages;
+        _user = data.conversation.user;
+        if (!data.conversation.status) {
+          textareaClass = 'disabled';
+        } else {
+          textareaClass = '';
+        }
+
+        socket = echo
+          .join(channel)
+          //.here()
+          //.joining((user) => (_user = user))
+          //.leaving((user) => {})
+          .listen(".conversation.terminated", (msg) => {
+            textareaClass = 'disabled';
+            _chats.push(msg);
+            if (msg.sender_type_text == "user") {
+              window.parent.postMessage({action: 'showNotification', msg})
+            }
+          })
+          .listenForWhisper("message", (msg) => {
+            _chats.push(msg);
+            if (msg.sender_type_text == "user") {
+              window.parent.postMessage({action: 'showNotification', msg})
+            }
+          })
+          .listenForWhisper('startTyping', (evt) => {
+            typing = true;
+            typingUser = evt;
+          })
+          .listenForWhisper('stopTyping', (evt) => {
+            typing = false;
+          });
+
+        //startTyping()
+      }, 1000);
     }
   };
 
