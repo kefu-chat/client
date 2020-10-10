@@ -2,6 +2,7 @@ import svelte from "rollup-plugin-svelte";
 import replace from "@rollup/plugin-replace";
 import resolve from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
+import babel from '@rollup/plugin-babel';
 import { terser } from "rollup-plugin-terser";
 import pkg from "./package.json";
 import 'dotenv/config';
@@ -31,6 +32,10 @@ export default {
     file: "public/build/bundle.js",
   },
   plugins: [
+    babel({
+      presets: [],
+      sourceMaps: false,
+    }),
     replace({
       "process.browser": true,
       API_URL: JSON.stringify(process.env.API_URL),

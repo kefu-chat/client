@@ -2,6 +2,7 @@ const path = require('path');
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const webpack = require('webpack');
 const AssetsPlugin = require('assets-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 require('dotenv').config();
 
@@ -23,6 +24,9 @@ module.exports = {
       WIDGET_URL: JSON.stringify(process.env.WIDGET_URL),
       SOCKET_HOST: JSON.stringify(process.env.SOCKET_HOST),
     }),
+    new MiniCssExtractPlugin({
+      filename: '[name].css'
+    }),
     new UglifyJsPlugin({
       sourceMap: true,
       test: /\.js(\?.*)?$/i,
@@ -37,7 +41,7 @@ module.exports = {
         compiler.hooks.afterCompile.tap('jest', compilation => {
           // run `npm test` using `spawn` to keep the format of the terminal just like you run it manually.
           // for more info: https://stackoverflow.com/a/20145153/863110
-          console.log(compilation)
+          //console.log(compilation)
         });
       }
     }
