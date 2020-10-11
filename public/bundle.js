@@ -43,6 +43,10 @@ var app = (function () {
       return a != a ? b == b : a !== b || a && typeof a === 'object' || typeof a === 'function';
     }
 
+    function is_empty(obj) {
+      return Object.keys(obj).length === 0;
+    }
+
     function validate_store(store, name) {
       if (store != null && typeof store.subscribe !== 'function') {
         throw new Error(`'${name}' is not a store with a 'subscribe' method`);
@@ -96,6 +100,15 @@ var app = (function () {
       }
 
       return $$scope.dirty;
+    }
+
+    function update_slot(slot, slot_definition, ctx, $$scope, dirty, get_slot_changes_fn, get_slot_context_fn) {
+      const slot_changes = get_slot_changes(slot_definition, $$scope, dirty, get_slot_changes_fn);
+
+      if (slot_changes) {
+        const slot_context = get_slot_context(slot_definition, ctx, $$scope, get_slot_context_fn);
+        slot.p(slot_context, slot_changes);
+      }
     }
 
     function null_to_empty(value) {
@@ -195,9 +208,7 @@ var app = (function () {
     }
 
     function set_input_value(input, value) {
-      if (value != null || input.value) {
-        input.value = value;
-      }
+      input.value = value == null ? '' : value;
     }
 
     function set_style(node, key, value, important) {
@@ -363,6 +374,7 @@ var app = (function () {
           update(component.$$);
         }
 
+        set_current_component(null);
         dirty_components.length = 0;
 
         while (binding_callbacks.length) binding_callbacks.pop()(); // then, once components are updated, call
@@ -650,7 +662,7 @@ var app = (function () {
 
       function insert(block) {
         transition_in(block, 1);
-        block.m(node, next, lookup.has(block.key));
+        block.m(node, next);
         lookup.set(block.key, block);
         next = block.first;
         n--;
@@ -789,14 +801,15 @@ var app = (function () {
         context: new Map(parent_component ? parent_component.$$.context : []),
         // everything else
         callbacks: blank_object(),
-        dirty
+        dirty,
+        skip_bound: false
       };
       let ready = false;
       $$.ctx = instance ? instance(component, prop_values, (i, ret, ...rest) => {
         const value = rest.length ? rest[0] : ret;
 
         if ($$.ctx && not_equal($$.ctx[i], $$.ctx[i] = value)) {
-          if ($$.bound[i]) $$.bound[i](value);
+          if (!$$.skip_bound && $$.bound[i]) $$.bound[i](value);
           if (ready) make_dirty(component, i);
         }
 
@@ -842,14 +855,19 @@ var app = (function () {
         };
       }
 
-      $set() {// overridden by instance, if it has props
+      $set($$props) {
+        if (this.$$set && !is_empty($$props)) {
+          this.$$.skip_bound = true;
+          this.$$set($$props);
+          this.$$.skip_bound = false;
+        }
       }
 
     }
 
     function dispatch_dev(type, detail) {
       document.dispatchEvent(custom_event(type, Object.assign({
-        version: '3.21.0'
+        version: '3.25.1'
       }, detail)));
     }
 
@@ -913,7 +931,7 @@ var app = (function () {
 
     function set_data_dev(text, data) {
       data = '' + data;
-      if (text.data === data) return;
+      if (text.wholeText === data) return;
       dispatch_dev("SvelteDOMSetData", {
         node: text,
         data
@@ -2180,12 +2198,6 @@ var app = (function () {
           callbacks.splice(i, 1);
           break;
         }
-      } // Remove event specific arrays for event types that no
-      // one is subscribed for to avoid memory leak.
-
-
-      if (callbacks.length === 0) {
-        delete this._callbacks['$' + event];
       }
 
       return this;
@@ -2201,12 +2213,8 @@ var app = (function () {
 
     Emitter.prototype.emit = function (event) {
       this._callbacks = this._callbacks || {};
-      var args = new Array(arguments.length - 1),
+      var args = [].slice.call(arguments, 1),
           callbacks = this._callbacks['$' + event];
-
-      for (var i = 1; i < arguments.length; i++) {
-        args[i - 1] = arguments[i];
-      }
 
       if (callbacks) {
         callbacks = callbacks.slice(0);
@@ -3309,7 +3317,15 @@ var app = (function () {
      * Copyright (c) 2012 Niklas von Hertzen
      * Licensed under the MIT license.
      */
-    (function (chars) {
+    (function () {
+
+      var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"; // Use a lookup table to find the index.
+
+      var lookup = new Uint8Array(256);
+
+      for (var i = 0; i < chars.length; i++) {
+        lookup[chars.charCodeAt(i)] = i;
+      }
 
       exports.encode = function (arraybuffer) {
         var bytes = new Uint8Array(arraybuffer),
@@ -3355,10 +3371,10 @@ var app = (function () {
             bytes = new Uint8Array(arraybuffer);
 
         for (i = 0; i < len; i += 4) {
-          encoded1 = chars.indexOf(base64[i]);
-          encoded2 = chars.indexOf(base64[i + 1]);
-          encoded3 = chars.indexOf(base64[i + 2]);
-          encoded4 = chars.indexOf(base64[i + 3]);
+          encoded1 = lookup[base64.charCodeAt(i)];
+          encoded2 = lookup[base64.charCodeAt(i + 1)];
+          encoded3 = lookup[base64.charCodeAt(i + 2)];
+          encoded4 = lookup[base64.charCodeAt(i + 3)];
           bytes[p++] = encoded1 << 2 | encoded2 >> 4;
           bytes[p++] = (encoded2 & 15) << 4 | encoded3 >> 2;
           bytes[p++] = (encoded3 & 3) << 6 | encoded4 & 63;
@@ -3366,7 +3382,7 @@ var app = (function () {
 
         return arraybuffer;
       };
-    })("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/");
+    })();
     });
     var base64Arraybuffer_1 = base64Arraybuffer.encode;
     var base64Arraybuffer_2 = base64Arraybuffer.decode;
@@ -4128,6 +4144,177 @@ var app = (function () {
     var browser_10 = browser$2.encodePayloadAsBlob;
     var browser_11 = browser$2.decodePayloadAsBinary;
 
+    var componentEmitter$1 = createCommonjsModule(function (module) {
+    /**
+     * Expose `Emitter`.
+     */
+    {
+      module.exports = Emitter;
+    }
+    /**
+     * Initialize a new `Emitter`.
+     *
+     * @api public
+     */
+
+
+    function Emitter(obj) {
+      if (obj) return mixin(obj);
+    }
+    /**
+     * Mixin the emitter properties.
+     *
+     * @param {Object} obj
+     * @return {Object}
+     * @api private
+     */
+
+    function mixin(obj) {
+      for (var key in Emitter.prototype) {
+        obj[key] = Emitter.prototype[key];
+      }
+
+      return obj;
+    }
+    /**
+     * Listen on the given `event` with `fn`.
+     *
+     * @param {String} event
+     * @param {Function} fn
+     * @return {Emitter}
+     * @api public
+     */
+
+
+    Emitter.prototype.on = Emitter.prototype.addEventListener = function (event, fn) {
+      this._callbacks = this._callbacks || {};
+      (this._callbacks['$' + event] = this._callbacks['$' + event] || []).push(fn);
+      return this;
+    };
+    /**
+     * Adds an `event` listener that will be invoked a single
+     * time then automatically removed.
+     *
+     * @param {String} event
+     * @param {Function} fn
+     * @return {Emitter}
+     * @api public
+     */
+
+
+    Emitter.prototype.once = function (event, fn) {
+      function on() {
+        this.off(event, on);
+        fn.apply(this, arguments);
+      }
+
+      on.fn = fn;
+      this.on(event, on);
+      return this;
+    };
+    /**
+     * Remove the given callback for `event` or all
+     * registered callbacks.
+     *
+     * @param {String} event
+     * @param {Function} fn
+     * @return {Emitter}
+     * @api public
+     */
+
+
+    Emitter.prototype.off = Emitter.prototype.removeListener = Emitter.prototype.removeAllListeners = Emitter.prototype.removeEventListener = function (event, fn) {
+      this._callbacks = this._callbacks || {}; // all
+
+      if (0 == arguments.length) {
+        this._callbacks = {};
+        return this;
+      } // specific event
+
+
+      var callbacks = this._callbacks['$' + event];
+      if (!callbacks) return this; // remove all handlers
+
+      if (1 == arguments.length) {
+        delete this._callbacks['$' + event];
+        return this;
+      } // remove specific handler
+
+
+      var cb;
+
+      for (var i = 0; i < callbacks.length; i++) {
+        cb = callbacks[i];
+
+        if (cb === fn || cb.fn === fn) {
+          callbacks.splice(i, 1);
+          break;
+        }
+      } // Remove event specific arrays for event types that no
+      // one is subscribed for to avoid memory leak.
+
+
+      if (callbacks.length === 0) {
+        delete this._callbacks['$' + event];
+      }
+
+      return this;
+    };
+    /**
+     * Emit `event` with the given args.
+     *
+     * @param {String} event
+     * @param {Mixed} ...
+     * @return {Emitter}
+     */
+
+
+    Emitter.prototype.emit = function (event) {
+      this._callbacks = this._callbacks || {};
+      var args = new Array(arguments.length - 1),
+          callbacks = this._callbacks['$' + event];
+
+      for (var i = 1; i < arguments.length; i++) {
+        args[i - 1] = arguments[i];
+      }
+
+      if (callbacks) {
+        callbacks = callbacks.slice(0);
+
+        for (var i = 0, len = callbacks.length; i < len; ++i) {
+          callbacks[i].apply(this, args);
+        }
+      }
+
+      return this;
+    };
+    /**
+     * Return array of callbacks for `event`.
+     *
+     * @param {String} event
+     * @return {Array}
+     * @api public
+     */
+
+
+    Emitter.prototype.listeners = function (event) {
+      this._callbacks = this._callbacks || {};
+      return this._callbacks['$' + event] || [];
+    };
+    /**
+     * Check if this emitter has `event` handlers.
+     *
+     * @param {String} event
+     * @return {Boolean}
+     * @api public
+     */
+
+
+    Emitter.prototype.hasListeners = function (event) {
+      return !!this.listeners(event).length;
+    };
+    });
+
     /**
      * Module dependencies.
      */
@@ -4180,7 +4367,7 @@ var app = (function () {
      */
 
 
-    componentEmitter(Transport.prototype);
+    componentEmitter$1(Transport.prototype);
     /**
      * Emits an error.
      *
@@ -4405,251 +4592,458 @@ var app = (function () {
     yeast.decode = decode$1;
     var yeast_1 = yeast;
 
-    var debug$3 = createCommonjsModule(function (module, exports) {
     /**
-     * This is the common logic for both the Node.js and web browser
-     * implementations of `debug()`.
+     * Helpers.
+     */
+    var s$1 = 1000;
+    var m$1 = s$1 * 60;
+    var h$1 = m$1 * 60;
+    var d$1 = h$1 * 24;
+    var w = d$1 * 7;
+    var y$1 = d$1 * 365.25;
+    /**
+     * Parse or format the given `val`.
      *
-     * Expose `debug()` as the module.
-     */
-    exports = module.exports = createDebug.debug = createDebug['default'] = createDebug;
-    exports.coerce = coerce;
-    exports.disable = disable;
-    exports.enable = enable;
-    exports.enabled = enabled;
-    exports.humanize = ms;
-    /**
-     * Active `debug` instances.
-     */
-
-    exports.instances = [];
-    /**
-     * The currently active debug mode names, and names to skip.
-     */
-
-    exports.names = [];
-    exports.skips = [];
-    /**
-     * Map of special "%n" handling functions, for the debug "format" argument.
+     * Options:
      *
-     * Valid key names are a single, lower or upper-case letter, i.e. "n" and "N".
+     *  - `long` verbose formatting [false]
+     *
+     * @param {String|Number} val
+     * @param {Object} [options]
+     * @throws {Error} throw an error if val is not a non-empty string or a number
+     * @return {String|Number}
+     * @api public
      */
 
-    exports.formatters = {};
+    var ms$1 = function (val, options) {
+      options = options || {};
+      var type = typeof val;
+
+      if (type === 'string' && val.length > 0) {
+        return parse$1(val);
+      } else if (type === 'number' && isFinite(val)) {
+        return options.long ? fmtLong$1(val) : fmtShort$1(val);
+      }
+
+      throw new Error('val is not a non-empty string or a valid number. val=' + JSON.stringify(val));
+    };
     /**
-     * Select a color.
-     * @param {String} namespace
+     * Parse the given `str` and return milliseconds.
+     *
+     * @param {String} str
      * @return {Number}
      * @api private
      */
 
-    function selectColor(namespace) {
-      var hash = 0,
-          i;
 
-      for (i in namespace) {
-        hash = (hash << 5) - hash + namespace.charCodeAt(i);
-        hash |= 0; // Convert to 32bit integer
+    function parse$1(str) {
+      str = String(str);
+
+      if (str.length > 100) {
+        return;
       }
 
-      return exports.colors[Math.abs(hash) % exports.colors.length];
-    }
-    /**
-     * Create a debugger with the given `namespace`.
-     *
-     * @param {String} namespace
-     * @return {Function}
-     * @api public
-     */
+      var match = /^(-?(?:\d+)?\.?\d+) *(milliseconds?|msecs?|ms|seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|h|days?|d|weeks?|w|years?|yrs?|y)?$/i.exec(str);
 
-
-    function createDebug(namespace) {
-      var prevTime;
-
-      function debug() {
-        // disabled?
-        if (!debug.enabled) return;
-        var self = debug; // set `diff` timestamp
-
-        var curr = +new Date();
-        var ms = curr - (prevTime || curr);
-        self.diff = ms;
-        self.prev = prevTime;
-        self.curr = curr;
-        prevTime = curr; // turn the `arguments` into a proper Array
-
-        var args = new Array(arguments.length);
-
-        for (var i = 0; i < args.length; i++) {
-          args[i] = arguments[i];
-        }
-
-        args[0] = exports.coerce(args[0]);
-
-        if ('string' !== typeof args[0]) {
-          // anything else let's inspect with %O
-          args.unshift('%O');
-        } // apply any `formatters` transformations
-
-
-        var index = 0;
-        args[0] = args[0].replace(/%([a-zA-Z%])/g, function (match, format) {
-          // if we encounter an escaped % then don't increase the array index
-          if (match === '%%') return match;
-          index++;
-          var formatter = exports.formatters[format];
-
-          if ('function' === typeof formatter) {
-            var val = args[index];
-            match = formatter.call(self, val); // now we need to remove `args[index]` since it's inlined in the `format`
-
-            args.splice(index, 1);
-            index--;
-          }
-
-          return match;
-        }); // apply env-specific formatting (colors, etc.)
-
-        exports.formatArgs.call(self, args);
-        var logFn = debug.log || exports.log || console.log.bind(console);
-        logFn.apply(self, args);
+      if (!match) {
+        return;
       }
 
-      debug.namespace = namespace;
-      debug.enabled = exports.enabled(namespace);
-      debug.useColors = exports.useColors();
-      debug.color = selectColor(namespace);
-      debug.destroy = destroy; // env-specific initialization logic for debug instances
+      var n = parseFloat(match[1]);
+      var type = (match[2] || 'ms').toLowerCase();
 
-      if ('function' === typeof exports.init) {
-        exports.init(debug);
-      }
+      switch (type) {
+        case 'years':
+        case 'year':
+        case 'yrs':
+        case 'yr':
+        case 'y':
+          return n * y$1;
 
-      exports.instances.push(debug);
-      return debug;
-    }
+        case 'weeks':
+        case 'week':
+        case 'w':
+          return n * w;
 
-    function destroy() {
-      var index = exports.instances.indexOf(this);
+        case 'days':
+        case 'day':
+        case 'd':
+          return n * d$1;
 
-      if (index !== -1) {
-        exports.instances.splice(index, 1);
-        return true;
-      } else {
-        return false;
+        case 'hours':
+        case 'hour':
+        case 'hrs':
+        case 'hr':
+        case 'h':
+          return n * h$1;
+
+        case 'minutes':
+        case 'minute':
+        case 'mins':
+        case 'min':
+        case 'm':
+          return n * m$1;
+
+        case 'seconds':
+        case 'second':
+        case 'secs':
+        case 'sec':
+        case 's':
+          return n * s$1;
+
+        case 'milliseconds':
+        case 'millisecond':
+        case 'msecs':
+        case 'msec':
+        case 'ms':
+          return n;
+
+        default:
+          return undefined;
       }
     }
     /**
-     * Enables a debug mode by namespaces. This can include modes
-     * separated by a colon and wildcards.
+     * Short format for `ms`.
      *
-     * @param {String} namespaces
-     * @api public
-     */
-
-
-    function enable(namespaces) {
-      exports.save(namespaces);
-      exports.names = [];
-      exports.skips = [];
-      var i;
-      var split = (typeof namespaces === 'string' ? namespaces : '').split(/[\s,]+/);
-      var len = split.length;
-
-      for (i = 0; i < len; i++) {
-        if (!split[i]) continue; // ignore empty strings
-
-        namespaces = split[i].replace(/\*/g, '.*?');
-
-        if (namespaces[0] === '-') {
-          exports.skips.push(new RegExp('^' + namespaces.substr(1) + '$'));
-        } else {
-          exports.names.push(new RegExp('^' + namespaces + '$'));
-        }
-      }
-
-      for (i = 0; i < exports.instances.length; i++) {
-        var instance = exports.instances[i];
-        instance.enabled = exports.enabled(instance.namespace);
-      }
-    }
-    /**
-     * Disable debug output.
-     *
-     * @api public
-     */
-
-
-    function disable() {
-      exports.enable('');
-    }
-    /**
-     * Returns true if the given mode name is enabled, false otherwise.
-     *
-     * @param {String} name
-     * @return {Boolean}
-     * @api public
-     */
-
-
-    function enabled(name) {
-      if (name[name.length - 1] === '*') {
-        return true;
-      }
-
-      var i, len;
-
-      for (i = 0, len = exports.skips.length; i < len; i++) {
-        if (exports.skips[i].test(name)) {
-          return false;
-        }
-      }
-
-      for (i = 0, len = exports.names.length; i < len; i++) {
-        if (exports.names[i].test(name)) {
-          return true;
-        }
-      }
-
-      return false;
-    }
-    /**
-     * Coerce `val`.
-     *
-     * @param {Mixed} val
-     * @return {Mixed}
+     * @param {Number} ms
+     * @return {String}
      * @api private
      */
 
 
-    function coerce(val) {
-      if (val instanceof Error) return val.stack || val.message;
-      return val;
+    function fmtShort$1(ms) {
+      var msAbs = Math.abs(ms);
+
+      if (msAbs >= d$1) {
+        return Math.round(ms / d$1) + 'd';
+      }
+
+      if (msAbs >= h$1) {
+        return Math.round(ms / h$1) + 'h';
+      }
+
+      if (msAbs >= m$1) {
+        return Math.round(ms / m$1) + 'm';
+      }
+
+      if (msAbs >= s$1) {
+        return Math.round(ms / s$1) + 's';
+      }
+
+      return ms + 'ms';
     }
-    });
-    var debug_1$2 = debug$3.coerce;
-    var debug_2$2 = debug$3.disable;
-    var debug_3$2 = debug$3.enable;
-    var debug_4$2 = debug$3.enabled;
-    var debug_5$2 = debug$3.humanize;
-    var debug_6$2 = debug$3.instances;
-    var debug_7$2 = debug$3.names;
-    var debug_8$2 = debug$3.skips;
-    var debug_9$2 = debug$3.formatters;
+    /**
+     * Long format for `ms`.
+     *
+     * @param {Number} ms
+     * @return {String}
+     * @api private
+     */
+
+
+    function fmtLong$1(ms) {
+      var msAbs = Math.abs(ms);
+
+      if (msAbs >= d$1) {
+        return plural$1(ms, msAbs, d$1, 'day');
+      }
+
+      if (msAbs >= h$1) {
+        return plural$1(ms, msAbs, h$1, 'hour');
+      }
+
+      if (msAbs >= m$1) {
+        return plural$1(ms, msAbs, m$1, 'minute');
+      }
+
+      if (msAbs >= s$1) {
+        return plural$1(ms, msAbs, s$1, 'second');
+      }
+
+      return ms + ' ms';
+    }
+    /**
+     * Pluralization helper.
+     */
+
+
+    function plural$1(ms, msAbs, n, name) {
+      var isPlural = msAbs >= n * 1.5;
+      return Math.round(ms / n) + ' ' + name + (isPlural ? 's' : '');
+    }
+
+    /**
+     * This is the common logic for both the Node.js and web browser
+     * implementations of `debug()`.
+     */
+    function setup(env) {
+      createDebug.debug = createDebug;
+      createDebug.default = createDebug;
+      createDebug.coerce = coerce;
+      createDebug.disable = disable;
+      createDebug.enable = enable;
+      createDebug.enabled = enabled;
+      createDebug.humanize = ms$1;
+      Object.keys(env).forEach(key => {
+        createDebug[key] = env[key];
+      });
+      /**
+      * Active `debug` instances.
+      */
+
+      createDebug.instances = [];
+      /**
+      * The currently active debug mode names, and names to skip.
+      */
+
+      createDebug.names = [];
+      createDebug.skips = [];
+      /**
+      * Map of special "%n" handling functions, for the debug "format" argument.
+      *
+      * Valid key names are a single, lower or upper-case letter, i.e. "n" and "N".
+      */
+
+      createDebug.formatters = {};
+      /**
+      * Selects a color for a debug namespace
+      * @param {String} namespace The namespace string for the for the debug instance to be colored
+      * @return {Number|String} An ANSI color code for the given namespace
+      * @api private
+      */
+
+      function selectColor(namespace) {
+        let hash = 0;
+
+        for (let i = 0; i < namespace.length; i++) {
+          hash = (hash << 5) - hash + namespace.charCodeAt(i);
+          hash |= 0; // Convert to 32bit integer
+        }
+
+        return createDebug.colors[Math.abs(hash) % createDebug.colors.length];
+      }
+
+      createDebug.selectColor = selectColor;
+      /**
+      * Create a debugger with the given `namespace`.
+      *
+      * @param {String} namespace
+      * @return {Function}
+      * @api public
+      */
+
+      function createDebug(namespace) {
+        let prevTime;
+
+        function debug(...args) {
+          // Disabled?
+          if (!debug.enabled) {
+            return;
+          }
+
+          const self = debug; // Set `diff` timestamp
+
+          const curr = Number(new Date());
+          const ms = curr - (prevTime || curr);
+          self.diff = ms;
+          self.prev = prevTime;
+          self.curr = curr;
+          prevTime = curr;
+          args[0] = createDebug.coerce(args[0]);
+
+          if (typeof args[0] !== 'string') {
+            // Anything else let's inspect with %O
+            args.unshift('%O');
+          } // Apply any `formatters` transformations
+
+
+          let index = 0;
+          args[0] = args[0].replace(/%([a-zA-Z%])/g, (match, format) => {
+            // If we encounter an escaped % then don't increase the array index
+            if (match === '%%') {
+              return match;
+            }
+
+            index++;
+            const formatter = createDebug.formatters[format];
+
+            if (typeof formatter === 'function') {
+              const val = args[index];
+              match = formatter.call(self, val); // Now we need to remove `args[index]` since it's inlined in the `format`
+
+              args.splice(index, 1);
+              index--;
+            }
+
+            return match;
+          }); // Apply env-specific formatting (colors, etc.)
+
+          createDebug.formatArgs.call(self, args);
+          const logFn = self.log || createDebug.log;
+          logFn.apply(self, args);
+        }
+
+        debug.namespace = namespace;
+        debug.enabled = createDebug.enabled(namespace);
+        debug.useColors = createDebug.useColors();
+        debug.color = selectColor(namespace);
+        debug.destroy = destroy;
+        debug.extend = extend; // Debug.formatArgs = formatArgs;
+        // debug.rawLog = rawLog;
+        // env-specific initialization logic for debug instances
+
+        if (typeof createDebug.init === 'function') {
+          createDebug.init(debug);
+        }
+
+        createDebug.instances.push(debug);
+        return debug;
+      }
+
+      function destroy() {
+        const index = createDebug.instances.indexOf(this);
+
+        if (index !== -1) {
+          createDebug.instances.splice(index, 1);
+          return true;
+        }
+
+        return false;
+      }
+
+      function extend(namespace, delimiter) {
+        const newDebug = createDebug(this.namespace + (typeof delimiter === 'undefined' ? ':' : delimiter) + namespace);
+        newDebug.log = this.log;
+        return newDebug;
+      }
+      /**
+      * Enables a debug mode by namespaces. This can include modes
+      * separated by a colon and wildcards.
+      *
+      * @param {String} namespaces
+      * @api public
+      */
+
+
+      function enable(namespaces) {
+        createDebug.save(namespaces);
+        createDebug.names = [];
+        createDebug.skips = [];
+        let i;
+        const split = (typeof namespaces === 'string' ? namespaces : '').split(/[\s,]+/);
+        const len = split.length;
+
+        for (i = 0; i < len; i++) {
+          if (!split[i]) {
+            // ignore empty strings
+            continue;
+          }
+
+          namespaces = split[i].replace(/\*/g, '.*?');
+
+          if (namespaces[0] === '-') {
+            createDebug.skips.push(new RegExp('^' + namespaces.substr(1) + '$'));
+          } else {
+            createDebug.names.push(new RegExp('^' + namespaces + '$'));
+          }
+        }
+
+        for (i = 0; i < createDebug.instances.length; i++) {
+          const instance = createDebug.instances[i];
+          instance.enabled = createDebug.enabled(instance.namespace);
+        }
+      }
+      /**
+      * Disable debug output.
+      *
+      * @return {String} namespaces
+      * @api public
+      */
+
+
+      function disable() {
+        const namespaces = [...createDebug.names.map(toNamespace), ...createDebug.skips.map(toNamespace).map(namespace => '-' + namespace)].join(',');
+        createDebug.enable('');
+        return namespaces;
+      }
+      /**
+      * Returns true if the given mode name is enabled, false otherwise.
+      *
+      * @param {String} name
+      * @return {Boolean}
+      * @api public
+      */
+
+
+      function enabled(name) {
+        if (name[name.length - 1] === '*') {
+          return true;
+        }
+
+        let i;
+        let len;
+
+        for (i = 0, len = createDebug.skips.length; i < len; i++) {
+          if (createDebug.skips[i].test(name)) {
+            return false;
+          }
+        }
+
+        for (i = 0, len = createDebug.names.length; i < len; i++) {
+          if (createDebug.names[i].test(name)) {
+            return true;
+          }
+        }
+
+        return false;
+      }
+      /**
+      * Convert regexp to namespace
+      *
+      * @param {RegExp} regxep
+      * @return {String} namespace
+      * @api private
+      */
+
+
+      function toNamespace(regexp) {
+        return regexp.toString().substring(2, regexp.toString().length - 2).replace(/\.\*\?$/, '*');
+      }
+      /**
+      * Coerce `val`.
+      *
+      * @param {Mixed} val
+      * @return {Mixed}
+      * @api private
+      */
+
+
+      function coerce(val) {
+        if (val instanceof Error) {
+          return val.stack || val.message;
+        }
+
+        return val;
+      }
+
+      createDebug.enable(createDebug.load());
+      return createDebug;
+    }
+
+    var common = setup;
 
     var browser$3 = createCommonjsModule(function (module, exports) {
+    /* eslint-env browser */
+
     /**
      * This is the web browser implementation of `debug()`.
-     *
-     * Expose `debug()` as the module.
      */
-    exports = module.exports = debug$3;
     exports.log = log;
     exports.formatArgs = formatArgs;
     exports.save = save;
     exports.load = load;
     exports.useColors = useColors;
-    exports.storage = 'undefined' != typeof chrome && 'undefined' != typeof chrome.storage ? chrome.storage.local : localstorage();
+    exports.storage = localstorage();
     /**
      * Colors.
      */
@@ -4662,40 +5056,29 @@ var app = (function () {
      *
      * TODO: add a `localStorage` variable to explicitly enable/disable colors
      */
+    // eslint-disable-next-line complexity
 
     function useColors() {
       // NB: In an Electron preload script, document will be defined but not fully
       // initialized. Since we know we're in Chrome, we'll just detect this case
       // explicitly
-      if (typeof window !== 'undefined' && window.process && window.process.type === 'renderer') {
+      if (typeof window !== 'undefined' && window.process && (window.process.type === 'renderer' || window.process.__nwjs)) {
         return true;
       } // Internet Explorer and Edge do not support colors.
 
 
       if (typeof navigator !== 'undefined' && navigator.userAgent && navigator.userAgent.toLowerCase().match(/(edge|trident)\/(\d+)/)) {
         return false;
-      } // is webkit? http://stackoverflow.com/a/16459606/376773
+      } // Is webkit? http://stackoverflow.com/a/16459606/376773
       // document is undefined in react-native: https://github.com/facebook/react-native/pull/1632
 
 
-      return typeof document !== 'undefined' && document.documentElement && document.documentElement.style && document.documentElement.style.WebkitAppearance || // is firebug? http://stackoverflow.com/a/398120/376773
-      typeof window !== 'undefined' && window.console && (window.console.firebug || window.console.exception && window.console.table) || // is firefox >= v31?
+      return typeof document !== 'undefined' && document.documentElement && document.documentElement.style && document.documentElement.style.WebkitAppearance || // Is firebug? http://stackoverflow.com/a/398120/376773
+      typeof window !== 'undefined' && window.console && (window.console.firebug || window.console.exception && window.console.table) || // Is firefox >= v31?
       // https://developer.mozilla.org/en-US/docs/Tools/Web_Console#Styling_messages
-      typeof navigator !== 'undefined' && navigator.userAgent && navigator.userAgent.toLowerCase().match(/firefox\/(\d+)/) && parseInt(RegExp.$1, 10) >= 31 || // double check webkit in userAgent just in case we are in a worker
+      typeof navigator !== 'undefined' && navigator.userAgent && navigator.userAgent.toLowerCase().match(/firefox\/(\d+)/) && parseInt(RegExp.$1, 10) >= 31 || // Double check webkit in userAgent just in case we are in a worker
       typeof navigator !== 'undefined' && navigator.userAgent && navigator.userAgent.toLowerCase().match(/applewebkit\/(\d+)/);
     }
-    /**
-     * Map %j to `JSON.stringify()`, since no Web Inspectors do that by default.
-     */
-
-
-    exports.formatters.j = function (v) {
-      try {
-        return JSON.stringify(v);
-      } catch (err) {
-        return '[UnexpectedJSONParseError]: ' + err.message;
-      }
-    };
     /**
      * Colorize log arguments if enabled.
      *
@@ -4704,22 +5087,28 @@ var app = (function () {
 
 
     function formatArgs(args) {
-      var useColors = this.useColors;
-      args[0] = (useColors ? '%c' : '') + this.namespace + (useColors ? ' %c' : ' ') + args[0] + (useColors ? '%c ' : ' ') + '+' + exports.humanize(this.diff);
-      if (!useColors) return;
-      var c = 'color: ' + this.color;
-      args.splice(1, 0, c, 'color: inherit'); // the final "%c" is somewhat tricky, because there could be other
+      args[0] = (this.useColors ? '%c' : '') + this.namespace + (this.useColors ? ' %c' : ' ') + args[0] + (this.useColors ? '%c ' : ' ') + '+' + module.exports.humanize(this.diff);
+
+      if (!this.useColors) {
+        return;
+      }
+
+      const c = 'color: ' + this.color;
+      args.splice(1, 0, c, 'color: inherit'); // The final "%c" is somewhat tricky, because there could be other
       // arguments passed either before or after the %c, so we need to
       // figure out the correct index to insert the CSS into
 
-      var index = 0;
-      var lastC = 0;
-      args[0].replace(/%[a-zA-Z%]/g, function (match) {
-        if ('%%' === match) return;
+      let index = 0;
+      let lastC = 0;
+      args[0].replace(/%[a-zA-Z%]/g, match => {
+        if (match === '%%') {
+          return;
+        }
+
         index++;
 
-        if ('%c' === match) {
-          // we only are interested in the *last* %c
+        if (match === '%c') {
+          // We only are interested in the *last* %c
           // (the user may have provided their own)
           lastC = index;
         }
@@ -4734,10 +5123,10 @@ var app = (function () {
      */
 
 
-    function log() {
-      // this hackery is required for IE8/9, where
+    function log(...args) {
+      // This hackery is required for IE8/9, where
       // the `console.log` function doesn't have 'apply'
-      return 'object' === typeof console && console.log && Function.prototype.apply.call(console.log, console, arguments);
+      return typeof console === 'object' && console.log && console.log(...args);
     }
     /**
      * Save `namespaces`.
@@ -4749,12 +5138,14 @@ var app = (function () {
 
     function save(namespaces) {
       try {
-        if (null == namespaces) {
-          exports.storage.removeItem('debug');
+        if (namespaces) {
+          exports.storage.setItem('debug', namespaces);
         } else {
-          exports.storage.debug = namespaces;
+          exports.storage.removeItem('debug');
         }
-      } catch (e) {}
+      } catch (error) {// Swallow
+        // XXX (@Qix-) should we be logging these?
+      }
     }
     /**
      * Load `namespaces`.
@@ -4765,11 +5156,13 @@ var app = (function () {
 
 
     function load() {
-      var r;
+      let r;
 
       try {
-        r = exports.storage.debug;
-      } catch (e) {} // If debug isn't set in LS, and we're in Electron, try to load $DEBUG
+        r = exports.storage.getItem('debug');
+      } catch (error) {// Swallow
+        // XXX (@Qix-) should we be logging these?
+      } // If debug isn't set in LS, and we're in Electron, try to load $DEBUG
 
 
       if (!r && typeof process !== 'undefined' && 'env' in process) {
@@ -4778,12 +5171,6 @@ var app = (function () {
 
       return r;
     }
-    /**
-     * Enable namespaces listed in `localStorage.debug` initially.
-     */
-
-
-    exports.enable(load());
     /**
      * Localstorage attempts to return the localstorage.
      *
@@ -4795,11 +5182,32 @@ var app = (function () {
      * @api private
      */
 
+
     function localstorage() {
       try {
-        return window.localStorage;
-      } catch (e) {}
+        // TVMLKit (Apple TV JS Runtime) does not have a window object, just localStorage in the global context
+        // The Browser also has localStorage in the global context.
+        return localStorage;
+      } catch (error) {// Swallow
+        // XXX (@Qix-) should we be logging these?
+      }
     }
+
+    module.exports = common(exports);
+    const {
+      formatters
+    } = module.exports;
+    /**
+     * Map %j to `JSON.stringify()`, since no Web Inspectors do that by default.
+     */
+
+    formatters.j = function (v) {
+      try {
+        return JSON.stringify(v);
+      } catch (error) {
+        return '[UnexpectedJSONParseError]: ' + error.message;
+      }
+    };
     });
     var browser_1$3 = browser$3.log;
     var browser_2$3 = browser$3.formatArgs;
@@ -4822,7 +5230,7 @@ var app = (function () {
 
 
 
-    var debug$4 = browser$3('engine.io-client:polling');
+    var debug$3 = browser$3('engine.io-client:polling');
     /**
      * Module exports.
      */
@@ -4892,7 +5300,7 @@ var app = (function () {
       this.readyState = 'pausing';
 
       function pause() {
-        debug$4('paused');
+        debug$3('paused');
         self.readyState = 'paused';
         onPause();
       }
@@ -4901,19 +5309,19 @@ var app = (function () {
         var total = 0;
 
         if (this.polling) {
-          debug$4('we are currently polling - waiting to pause');
+          debug$3('we are currently polling - waiting to pause');
           total++;
           this.once('pollComplete', function () {
-            debug$4('pre-pause polling complete');
+            debug$3('pre-pause polling complete');
             --total || pause();
           });
         }
 
         if (!this.writable) {
-          debug$4('we are currently writing - waiting to pause');
+          debug$3('we are currently writing - waiting to pause');
           total++;
           this.once('drain', function () {
-            debug$4('pre-pause writing complete');
+            debug$3('pre-pause writing complete');
             --total || pause();
           });
         }
@@ -4929,7 +5337,7 @@ var app = (function () {
 
 
     Polling.prototype.poll = function () {
-      debug$4('polling');
+      debug$3('polling');
       this.polling = true;
       this.doPoll();
       this.emit('poll');
@@ -4943,7 +5351,7 @@ var app = (function () {
 
     Polling.prototype.onData = function (data) {
       var self = this;
-      debug$4('polling got data %s', data);
+      debug$3('polling got data %s', data);
 
       var callback = function (packet, index, total) {
         // if its the first message we consider the transport open
@@ -4972,7 +5380,7 @@ var app = (function () {
         if ('open' === this.readyState) {
           this.poll();
         } else {
-          debug$4('ignoring poll - transport state "%s"', this.readyState);
+          debug$3('ignoring poll - transport state "%s"', this.readyState);
         }
       }
     };
@@ -4987,19 +5395,19 @@ var app = (function () {
       var self = this;
 
       function close() {
-        debug$4('writing close packet');
+        debug$3('writing close packet');
         self.write([{
           type: 'close'
         }]);
       }
 
       if ('open' === this.readyState) {
-        debug$4('transport open - closing');
+        debug$3('transport open - closing');
         close();
       } else {
         // in case we're trying to close while
         // handshaking is in progress (GH-164)
-        debug$4('transport not open - deferring close');
+        debug$3('transport not open - deferring close');
         this.once('open', close);
       }
     };
@@ -5073,7 +5481,7 @@ var app = (function () {
 
 
 
-    var debug$5 = browser$3('engine.io-client:polling-xhr');
+    var debug$4 = browser$3('engine.io-client:polling-xhr');
 
 
     /**
@@ -5184,7 +5592,7 @@ var app = (function () {
 
 
     XHR.prototype.doPoll = function () {
-      debug$5('xhr poll');
+      debug$4('xhr poll');
       var req = this.request();
       var self = this;
       req.on('data', function (data) {
@@ -5233,7 +5641,7 @@ var app = (function () {
      */
 
 
-    componentEmitter(Request.prototype);
+    componentEmitter$1(Request.prototype);
     /**
      * Creates the XHR object and sends the request.
      *
@@ -5259,7 +5667,7 @@ var app = (function () {
       var self = this;
 
       try {
-        debug$5('xhr open %s: %s', this.method, this.uri);
+        debug$4('xhr open %s: %s', this.method, this.uri);
         xhr.open(this.method, this.uri, this.async);
 
         try {
@@ -5331,7 +5739,7 @@ var app = (function () {
           };
         }
 
-        debug$5('xhr data %s', this.data);
+        debug$4('xhr data %s', this.data);
         xhr.send(this.data);
       } catch (e) {
         // Need to defer since .create() is called directly fhrom the constructor
@@ -5732,7 +6140,7 @@ var app = (function () {
 
 
 
-    var debug$6 = browser$3('engine.io-client:websocket');
+    var debug$5 = browser$3('engine.io-client:websocket');
 
     var BrowserWebSocket, NodeWebSocket;
 
@@ -5930,7 +6338,7 @@ var app = (function () {
                 self.ws.send(data, opts);
               }
             } catch (e) {
-              debug$6('websocket closed before onclose event');
+              debug$5('websocket closed before onclose event');
             }
 
             --total || done();
@@ -6089,13 +6497,49 @@ var app = (function () {
     };
 
     /**
+     * Parses an URI
+     *
+     * @author Steven Levithan <stevenlevithan.com> (MIT license)
+     * @api private
+     */
+    var re$1 = /^(?:(?![^:@]+:[^:@\/]*@)(http|https|ws|wss):\/\/)?((?:(([^:@]*)(?::([^:@]*))?)?@)?((?:[a-f0-9]{0,4}:){2,7}[a-f0-9]{0,4}|[^:\/?#]*)(?::(\d*))?)(((\/(?:[^?#](?![^?#\/]*\.[^?#\/.]+(?:[?#]|$)))*\/?)?([^?#\/]*))(?:\?([^#]*))?(?:#(.*))?)/;
+    var parts$1 = ['source', 'protocol', 'authority', 'userInfo', 'user', 'password', 'host', 'port', 'relative', 'path', 'directory', 'file', 'query', 'anchor'];
+
+    var parseuri$1 = function parseuri(str) {
+      var src = str,
+          b = str.indexOf('['),
+          e = str.indexOf(']');
+
+      if (b != -1 && e != -1) {
+        str = str.substring(0, b) + str.substring(b, e).replace(/:/g, ';') + str.substring(e, str.length);
+      }
+
+      var m = re$1.exec(str || ''),
+          uri = {},
+          i = 14;
+
+      while (i--) {
+        uri[parts$1[i]] = m[i] || '';
+      }
+
+      if (b != -1 && e != -1) {
+        uri.source = src;
+        uri.host = uri.host.substring(1, uri.host.length - 1).replace(/;/g, ':');
+        uri.authority = uri.authority.replace('[', '').replace(']', '').replace(/;/g, ':');
+        uri.ipv6uri = true;
+      }
+
+      return uri;
+    };
+
+    /**
      * Module dependencies.
      */
 
 
 
 
-    var debug$7 = browser$3('engine.io-client:socket');
+    var debug$6 = browser$3('engine.io-client:socket');
 
 
 
@@ -6128,13 +6572,13 @@ var app = (function () {
       }
 
       if (uri) {
-        uri = parseuri(uri);
+        uri = parseuri$1(uri);
         opts.hostname = uri.host;
         opts.secure = uri.protocol === 'https' || uri.protocol === 'wss';
         opts.port = uri.port;
         if (uri.query) opts.query = uri.query;
       } else if (opts.host) {
-        opts.hostname = parseuri(opts.host).host;
+        opts.hostname = parseuri$1(opts.host).host;
       }
 
       this.secure = null != opts.secure ? opts.secure : typeof location !== 'undefined' && 'https:' === location.protocol;
@@ -6212,7 +6656,7 @@ var app = (function () {
      * Mix in `Emitter`.
      */
 
-    componentEmitter(Socket.prototype);
+    componentEmitter$1(Socket.prototype);
     /**
      * Protocol version.
      *
@@ -6239,7 +6683,7 @@ var app = (function () {
      */
 
     Socket.prototype.createTransport = function (name) {
-      debug$7('creating transport "%s"', name);
+      debug$6('creating transport "%s"', name);
       var query = clone(this.query); // append engine.io protocol identifier
 
       query.EIO = browser$2.protocol; // transport name
@@ -6338,11 +6782,11 @@ var app = (function () {
 
 
     Socket.prototype.setTransport = function (transport) {
-      debug$7('setting transport %s', transport.name);
+      debug$6('setting transport %s', transport.name);
       var self = this;
 
       if (this.transport) {
-        debug$7('clearing existing transport %s', this.transport.name);
+        debug$6('clearing existing transport %s', this.transport.name);
         this.transport.removeAllListeners();
       } // set up transport
 
@@ -6368,7 +6812,7 @@ var app = (function () {
 
 
     Socket.prototype.probe = function (name) {
-      debug$7('probing transport "%s"', name);
+      debug$6('probing transport "%s"', name);
       var transport = this.createTransport(name, {
         probe: 1
       });
@@ -6383,7 +6827,7 @@ var app = (function () {
         }
 
         if (failed) return;
-        debug$7('probe transport "%s" opened', name);
+        debug$6('probe transport "%s" opened', name);
         transport.send([{
           type: 'ping',
           data: 'probe'
@@ -6392,16 +6836,16 @@ var app = (function () {
           if (failed) return;
 
           if ('pong' === msg.type && 'probe' === msg.data) {
-            debug$7('probe transport "%s" pong', name);
+            debug$6('probe transport "%s" pong', name);
             self.upgrading = true;
             self.emit('upgrading', transport);
             if (!transport) return;
             Socket.priorWebsocketSuccess = 'websocket' === transport.name;
-            debug$7('pausing current transport "%s"', self.transport.name);
+            debug$6('pausing current transport "%s"', self.transport.name);
             self.transport.pause(function () {
               if (failed) return;
               if ('closed' === self.readyState) return;
-              debug$7('changing transport and sending upgrade packet');
+              debug$6('changing transport and sending upgrade packet');
               cleanup();
               self.setTransport(transport);
               transport.send([{
@@ -6413,7 +6857,7 @@ var app = (function () {
               self.flush();
             });
           } else {
-            debug$7('probe transport "%s" failed', name);
+            debug$6('probe transport "%s" failed', name);
             var err = new Error('probe error');
             err.transport = transport.name;
             self.emit('upgradeError', err);
@@ -6435,7 +6879,7 @@ var app = (function () {
         var error = new Error('probe error: ' + err);
         error.transport = transport.name;
         freezeTransport();
-        debug$7('probe transport "%s" failed because of error: %s', name, err);
+        debug$6('probe transport "%s" failed because of error: %s', name, err);
         self.emit('upgradeError', error);
       }
 
@@ -6451,7 +6895,7 @@ var app = (function () {
 
       function onupgrade(to) {
         if (transport && to.name !== transport.name) {
-          debug$7('"%s" works - aborting "%s"', to.name, transport.name);
+          debug$6('"%s" works - aborting "%s"', to.name, transport.name);
           freezeTransport();
         }
       } // Remove all listeners on the transport and on self
@@ -6480,7 +6924,7 @@ var app = (function () {
 
 
     Socket.prototype.onOpen = function () {
-      debug$7('socket open');
+      debug$6('socket open');
       this.readyState = 'open';
       Socket.priorWebsocketSuccess = 'websocket' === this.transport.name;
       this.emit('open');
@@ -6488,7 +6932,7 @@ var app = (function () {
       // listener already closed the socket
 
       if ('open' === this.readyState && this.upgrade && this.transport.pause) {
-        debug$7('starting upgrade probes');
+        debug$6('starting upgrade probes');
 
         for (var i = 0, l = this.upgrades.length; i < l; i++) {
           this.probe(this.upgrades[i]);
@@ -6504,7 +6948,7 @@ var app = (function () {
 
     Socket.prototype.onPacket = function (packet) {
       if ('opening' === this.readyState || 'open' === this.readyState || 'closing' === this.readyState) {
-        debug$7('socket receive: type "%s", data "%s"', packet.type, packet.data);
+        debug$6('socket receive: type "%s", data "%s"', packet.type, packet.data);
         this.emit('packet', packet); // Socket is live - any packet counts
 
         this.emit('heartbeat');
@@ -6531,7 +6975,7 @@ var app = (function () {
             break;
         }
       } else {
-        debug$7('packet received with socket readyState "%s"', this.readyState);
+        debug$6('packet received with socket readyState "%s"', this.readyState);
       }
     };
     /**
@@ -6584,7 +7028,7 @@ var app = (function () {
       var self = this;
       clearTimeout(self.pingIntervalTimer);
       self.pingIntervalTimer = setTimeout(function () {
-        debug$7('writing ping packet - expecting pong within %sms', self.pingTimeout);
+        debug$6('writing ping packet - expecting pong within %sms', self.pingTimeout);
         self.ping();
         self.onHeartbeat(self.pingTimeout);
       }, self.pingInterval);
@@ -6631,7 +7075,7 @@ var app = (function () {
 
     Socket.prototype.flush = function () {
       if ('closed' !== this.readyState && this.transport.writable && !this.upgrading && this.writeBuffer.length) {
-        debug$7('flushing %d packets in socket', this.writeBuffer.length);
+        debug$6('flushing %d packets in socket', this.writeBuffer.length);
         this.transport.send(this.writeBuffer); // keep track of current length of writeBuffer
         // splice writeBuffer and callbackBuffer on `drain`
 
@@ -6721,7 +7165,7 @@ var app = (function () {
 
       function close() {
         self.onClose('forced close');
-        debug$7('socket closing - telling transport to close');
+        debug$6('socket closing - telling transport to close');
         self.transport.close();
       }
 
@@ -6747,7 +7191,7 @@ var app = (function () {
 
 
     Socket.prototype.onError = function (err) {
-      debug$7('socket error %j', err);
+      debug$6('socket error %j', err);
       Socket.priorWebsocketSuccess = false;
       this.emit('error', err);
       this.onClose('transport error', err);
@@ -6761,7 +7205,7 @@ var app = (function () {
 
     Socket.prototype.onClose = function (reason, desc) {
       if ('opening' === this.readyState || 'open' === this.readyState || 'closing' === this.readyState) {
-        debug$7('socket close with reason: "%s"', reason);
+        debug$6('socket close with reason: "%s"', reason);
         var self = this; // clear timers
 
         clearTimeout(this.pingIntervalTimer);
@@ -6871,6 +7315,50 @@ var app = (function () {
       };
     };
 
+    /**
+     * Compiles a querystring
+     * Returns string representation of the object
+     *
+     * @param {Object}
+     * @api private
+     */
+    var encode$2 = function (obj) {
+      var str = '';
+
+      for (var i in obj) {
+        if (obj.hasOwnProperty(i)) {
+          if (str.length) str += '&';
+          str += encodeURIComponent(i) + '=' + encodeURIComponent(obj[i]);
+        }
+      }
+
+      return str;
+    };
+    /**
+     * Parses a simple querystring into an object
+     *
+     * @param {String} qs
+     * @api private
+     */
+
+
+    var decode$2 = function (qs) {
+      var qry = {};
+      var pairs = qs.split('&');
+
+      for (var i = 0, l = pairs.length; i < l; i++) {
+        var pair = pairs[i].split('=');
+        qry[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1]);
+      }
+
+      return qry;
+    };
+
+    var parseqs$1 = {
+    	encode: encode$2,
+    	decode: decode$2
+    };
+
     var socket$1 = createCommonjsModule(function (module, exports) {
     /**
      * Module dependencies.
@@ -6922,7 +7410,7 @@ var app = (function () {
      * Shortcut to `Emitter#emit`.
      */
 
-    var emit = componentEmitter.prototype.emit;
+    var emit = componentEmitter$1.prototype.emit;
     /**
      * `Socket` constructor.
      *
@@ -6953,7 +7441,7 @@ var app = (function () {
      */
 
 
-    componentEmitter(Socket.prototype);
+    componentEmitter$1(Socket.prototype);
     /**
      * Subscribe to open, close and packet events
      *
@@ -7058,7 +7546,7 @@ var app = (function () {
 
       if ('/' !== this.nsp) {
         if (this.query) {
-          var query = typeof this.query === 'object' ? parseqs.encode(this.query) : this.query;
+          var query = typeof this.query === 'object' ? parseqs$1.encode(this.query) : this.query;
           debug('sending connect packet with query %s', query);
           this.packet({
             type: socket_ioParser.CONNECT,
@@ -7415,7 +7903,7 @@ var app = (function () {
 
 
 
-    var debug$8 = browser('socket.io-client:manager');
+    var debug$7 = browser('socket.io-client:manager');
 
 
 
@@ -7524,7 +8012,7 @@ var app = (function () {
      */
 
 
-    componentEmitter(Manager.prototype);
+    componentEmitter$1(Manager.prototype);
     /**
      * Sets the `reconnection` config.
      *
@@ -7627,9 +8115,9 @@ var app = (function () {
 
 
     Manager.prototype.open = Manager.prototype.connect = function (fn, opts) {
-      debug$8('readyState %s', this.readyState);
+      debug$7('readyState %s', this.readyState);
       if (~this.readyState.indexOf('open')) return this;
-      debug$8('opening %s', this.uri);
+      debug$7('opening %s', this.uri);
       this.engine = lib(this.uri, this.opts);
       var socket = this.engine;
       var self = this;
@@ -7642,7 +8130,7 @@ var app = (function () {
       }); // emit `connect_error`
 
       var errorSub = on_1(socket, 'error', function (data) {
-        debug$8('connect_error');
+        debug$7('connect_error');
         self.cleanup();
         self.readyState = 'closed';
         self.emitAll('connect_error', data);
@@ -7659,7 +8147,7 @@ var app = (function () {
 
       if (false !== this._timeout) {
         var timeout = this._timeout;
-        debug$8('connect attempt will timeout after %d', timeout);
+        debug$7('connect attempt will timeout after %d', timeout);
 
         if (timeout === 0) {
           openSub.destroy(); // prevents a race condition with the 'open' event
@@ -7667,7 +8155,7 @@ var app = (function () {
 
 
         var timer = setTimeout(function () {
-          debug$8('connect attempt timed out after %d', timeout);
+          debug$7('connect attempt timed out after %d', timeout);
           openSub.destroy();
           socket.close();
           socket.emit('error', 'timeout');
@@ -7692,7 +8180,7 @@ var app = (function () {
 
 
     Manager.prototype.onopen = function () {
-      debug$8('open'); // clear old subs
+      debug$7('open'); // clear old subs
 
       this.cleanup(); // mark as open
 
@@ -7756,7 +8244,7 @@ var app = (function () {
 
 
     Manager.prototype.onerror = function (err) {
-      debug$8('error', err);
+      debug$7('error', err);
       this.emitAll('error', err);
     };
     /**
@@ -7815,7 +8303,7 @@ var app = (function () {
 
 
     Manager.prototype.packet = function (packet) {
-      debug$8('writing packet %j', packet);
+      debug$7('writing packet %j', packet);
       var self = this;
       if (packet.query && packet.type === 0) packet.nsp += '?' + packet.query;
 
@@ -7857,7 +8345,7 @@ var app = (function () {
 
 
     Manager.prototype.cleanup = function () {
-      debug$8('cleanup');
+      debug$7('cleanup');
       var subsLength = this.subs.length;
 
       for (var i = 0; i < subsLength; i++) {
@@ -7878,7 +8366,7 @@ var app = (function () {
 
 
     Manager.prototype.close = Manager.prototype.disconnect = function () {
-      debug$8('disconnect');
+      debug$7('disconnect');
       this.skipReconnect = true;
       this.reconnecting = false;
 
@@ -7900,7 +8388,7 @@ var app = (function () {
 
 
     Manager.prototype.onclose = function (reason) {
-      debug$8('onclose');
+      debug$7('onclose');
       this.cleanup();
       this.backoff.reset();
       this.readyState = 'closed';
@@ -7922,29 +8410,29 @@ var app = (function () {
       var self = this;
 
       if (this.backoff.attempts >= this._reconnectionAttempts) {
-        debug$8('reconnect failed');
+        debug$7('reconnect failed');
         this.backoff.reset();
         this.emitAll('reconnect_failed');
         this.reconnecting = false;
       } else {
         var delay = this.backoff.duration();
-        debug$8('will wait %dms before reconnect attempt', delay);
+        debug$7('will wait %dms before reconnect attempt', delay);
         this.reconnecting = true;
         var timer = setTimeout(function () {
           if (self.skipReconnect) return;
-          debug$8('attempting reconnect');
+          debug$7('attempting reconnect');
           self.emitAll('reconnect_attempt', self.backoff.attempts);
           self.emitAll('reconnecting', self.backoff.attempts); // check again for the case socket closed in above events
 
           if (self.skipReconnect) return;
           self.open(function (err) {
             if (err) {
-              debug$8('reconnect attempt error');
+              debug$7('reconnect attempt error');
               self.reconnecting = false;
               self.reconnect();
               self.emitAll('reconnect_error', err.data);
             } else {
-              debug$8('reconnect success');
+              debug$7('reconnect success');
               self.onreconnect();
             }
           });
@@ -8070,7 +8558,7 @@ var app = (function () {
     var lib_4 = lib$1.Manager;
     var lib_5 = lib$1.Socket;
 
-    /* src/ui/Nav.svelte generated by Svelte v3.21.0 */
+    /* src/ui/Nav.svelte generated by Svelte v3.25.1 */
     const file = "src/ui/Nav.svelte";
 
     // (9:2) {#if showBack}
@@ -8079,6 +8567,7 @@ var app = (function () {
     	let svg;
     	let path;
     	let t;
+    	let mounted;
     	let dispose;
     	let if_block = /*backText*/ ctx[1] && create_if_block_1(ctx);
 
@@ -8100,14 +8589,17 @@ var app = (function () {
     			attr_dev(button, "class", "svelte-18l4t");
     			add_location(button, file, 9, 4, 202);
     		},
-    		m: function mount(target, anchor, remount) {
+    		m: function mount(target, anchor) {
     			insert_dev(target, button, anchor);
     			append_dev(button, svg);
     			append_dev(svg, path);
     			append_dev(button, t);
     			if (if_block) if_block.m(button, null);
-    			if (remount) dispose();
-    			dispose = listen_dev(button, "click", /*click_handler*/ ctx[5], false, false, false);
+
+    			if (!mounted) {
+    				dispose = listen_dev(button, "click", /*click_handler*/ ctx[5], false, false, false);
+    				mounted = true;
+    			}
     		},
     		p: function update(ctx, dirty) {
     			if (/*backText*/ ctx[1]) {
@@ -8126,6 +8618,7 @@ var app = (function () {
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(button);
     			if (if_block) if_block.d();
+    			mounted = false;
     			dispose();
     		}
     	};
@@ -8184,7 +8677,7 @@ var app = (function () {
     	let div1;
     	let current;
     	let if_block = /*showBack*/ ctx[0] && create_if_block(ctx);
-    	const default_slot_template = /*$$slots*/ ctx[4].default;
+    	const default_slot_template = /*#slots*/ ctx[4].default;
     	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[3], null);
 
     	const block = {
@@ -8235,7 +8728,7 @@ var app = (function () {
 
     			if (default_slot) {
     				if (default_slot.p && dirty & /*$$scope*/ 8) {
-    					default_slot.p(get_slot_context(default_slot_template, ctx, /*$$scope*/ ctx[3], null), get_slot_changes(default_slot_template, /*$$scope*/ ctx[3], dirty, null));
+    					update_slot(default_slot, default_slot_template, ctx, /*$$scope*/ ctx[3], dirty, null, null);
     				}
     			}
     		},
@@ -8267,6 +8760,8 @@ var app = (function () {
     }
 
     function instance($$self, $$props, $$invalidate) {
+    	let { $$slots: slots = {}, $$scope } = $$props;
+    	validate_slots("Nav", slots, ['default']);
     	let { showBack = false } = $$props;
     	let { backText = null } = $$props;
     	const dispatch = createEventDispatcher();
@@ -8276,11 +8771,9 @@ var app = (function () {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<Nav> was created with unknown prop '${key}'`);
     	});
 
-    	let { $$slots = {}, $$scope } = $$props;
-    	validate_slots("Nav", $$slots, ['default']);
     	const click_handler = () => dispatch("back");
 
-    	$$self.$set = $$props => {
+    	$$self.$$set = $$props => {
     		if ("showBack" in $$props) $$invalidate(0, showBack = $$props.showBack);
     		if ("backText" in $$props) $$invalidate(1, backText = $$props.backText);
     		if ("$$scope" in $$props) $$invalidate(3, $$scope = $$props.$$scope);
@@ -8302,7 +8795,7 @@ var app = (function () {
     		$$self.$inject_state($$props.$$inject);
     	}
 
-    	return [showBack, backText, dispatch, $$scope, $$slots, click_handler];
+    	return [showBack, backText, dispatch, $$scope, slots, click_handler];
     }
 
     class Nav extends SvelteComponentDev {
@@ -8468,7 +8961,7 @@ var app = (function () {
       return [transition(to_send, to_receive, false), transition(to_receive, to_send, true)];
     }
 
-    /* src/ui/Page.svelte generated by Svelte v3.21.0 */
+    /* src/ui/Page.svelte generated by Svelte v3.25.1 */
     const file$1 = "src/ui/Page.svelte";
 
     function create_fragment$1(ctx) {
@@ -8477,7 +8970,7 @@ var app = (function () {
     	let div1_intro;
     	let div1_outro;
     	let current;
-    	const default_slot_template = /*$$slots*/ ctx[1].default;
+    	const default_slot_template = /*#slots*/ ctx[1].default;
     	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[0], null);
 
     	const block = {
@@ -8506,7 +8999,7 @@ var app = (function () {
     		p: function update(ctx, [dirty]) {
     			if (default_slot) {
     				if (default_slot.p && dirty & /*$$scope*/ 1) {
-    					default_slot.p(get_slot_context(default_slot_template, ctx, /*$$scope*/ ctx[0], null), get_slot_changes(default_slot_template, /*$$scope*/ ctx[0], dirty, null));
+    					update_slot(default_slot, default_slot_template, ctx, /*$$scope*/ ctx[0], dirty, null, null);
     				}
     			}
     		},
@@ -8547,21 +9040,20 @@ var app = (function () {
     }
 
     function instance$1($$self, $$props, $$invalidate) {
+    	let { $$slots: slots = {}, $$scope } = $$props;
+    	validate_slots("Page", slots, ['default']);
     	const writable_props = [];
 
     	Object.keys($$props).forEach(key => {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<Page> was created with unknown prop '${key}'`);
     	});
 
-    	let { $$slots = {}, $$scope } = $$props;
-    	validate_slots("Page", $$slots, ['default']);
-
-    	$$self.$set = $$props => {
+    	$$self.$$set = $$props => {
     		if ("$$scope" in $$props) $$invalidate(0, $$scope = $$props.$$scope);
     	};
 
     	$$self.$capture_state = () => ({ fade });
-    	return [$$scope, $$slots];
+    	return [$$scope, slots];
     }
 
     class Page extends SvelteComponentDev {
@@ -8961,7 +9453,7 @@ var app = (function () {
       stripBOM: stripBOM
     };
 
-    function encode$2(val) {
+    function encode$3(val) {
       return encodeURIComponent(val).replace(/%3A/gi, ':').replace(/%24/g, '$').replace(/%2C/gi, ',').replace(/%20/g, '+').replace(/%5B/gi, '[').replace(/%5D/gi, ']');
     }
     /**
@@ -9005,7 +9497,7 @@ var app = (function () {
               v = JSON.stringify(v);
             }
 
-            parts.push(encode$2(key) + '=' + encode$2(v));
+            parts.push(encode$3(key) + '=' + encode$3(v));
           });
         });
         serializedParams = parts.join('&');
@@ -11607,7 +12099,7 @@ var app = (function () {
       storageKey: "chat_user"
     });
 
-    /* src/ScrollToBottom.svelte generated by Svelte v3.21.0 */
+    /* src/ScrollToBottom.svelte generated by Svelte v3.25.1 */
     const file$2 = "src/ScrollToBottom.svelte";
 
     function create_fragment$2(ctx) {
@@ -11616,6 +12108,7 @@ var app = (function () {
     	let div_intro;
     	let div_outro;
     	let current;
+    	let mounted;
     	let dispose;
 
     	const block = {
@@ -11631,22 +12124,25 @@ var app = (function () {
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
     		},
-    		m: function mount(target, anchor, remount) {
+    		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
     			append_dev(div, button);
     			current = true;
-    			if (remount) dispose();
 
-    			dispose = listen_dev(
-    				button,
-    				"click",
-    				prevent_default(function () {
-    					if (is_function(/*onScroll*/ ctx[0])) /*onScroll*/ ctx[0].apply(this, arguments);
-    				}),
-    				false,
-    				true,
-    				false
-    			);
+    			if (!mounted) {
+    				dispose = listen_dev(
+    					button,
+    					"click",
+    					prevent_default(function () {
+    						if (is_function(/*onScroll*/ ctx[0])) /*onScroll*/ ctx[0].apply(this, arguments);
+    					}),
+    					false,
+    					true,
+    					false
+    				);
+
+    				mounted = true;
+    			}
     		},
     		p: function update(new_ctx, [dirty]) {
     			ctx = new_ctx;
@@ -11670,6 +12166,7 @@ var app = (function () {
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(div);
     			if (detaching && div_outro) div_outro.end();
+    			mounted = false;
     			dispose();
     		}
     	};
@@ -11686,6 +12183,8 @@ var app = (function () {
     }
 
     function instance$2($$self, $$props, $$invalidate) {
+    	let { $$slots: slots = {}, $$scope } = $$props;
+    	validate_slots("ScrollToBottom", slots, []);
     	let { onScroll } = $$props;
     	const writable_props = ["onScroll"];
 
@@ -11693,10 +12192,7 @@ var app = (function () {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<ScrollToBottom> was created with unknown prop '${key}'`);
     	});
 
-    	let { $$slots = {}, $$scope } = $$props;
-    	validate_slots("ScrollToBottom", $$slots, []);
-
-    	$$self.$set = $$props => {
+    	$$self.$$set = $$props => {
     		if ("onScroll" in $$props) $$invalidate(0, onScroll = $$props.onScroll);
     	};
 
@@ -11742,12 +12238,13 @@ var app = (function () {
     	}
     }
 
-    /* src/ui/Input.svelte generated by Svelte v3.21.0 */
+    /* src/ui/Input.svelte generated by Svelte v3.25.1 */
     const file$3 = "src/ui/Input.svelte";
 
     // (134:2) {:else}
     function create_else_block(ctx) {
     	let input;
+    	let mounted;
     	let dispose;
 
     	const block = {
@@ -11763,11 +12260,14 @@ var app = (function () {
     			attr_dev(input, "placeholder", /*placeholder*/ ctx[3]);
     			add_location(input, file$3, 134, 4, 4480);
     		},
-    		m: function mount(target, anchor, remount) {
+    		m: function mount(target, anchor) {
     			insert_dev(target, input, anchor);
     			set_input_value(input, /*value*/ ctx[0]);
-    			if (remount) dispose();
-    			dispose = listen_dev(input, "input", /*input_input_handler*/ ctx[16]);
+
+    			if (!mounted) {
+    				dispose = listen_dev(input, "input", /*input_input_handler*/ ctx[14]);
+    				mounted = true;
+    			}
     		},
     		p: function update(ctx, dirty) {
     			if (dirty & /*rows*/ 128) {
@@ -11800,6 +12300,7 @@ var app = (function () {
     		},
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(input);
+    			mounted = false;
     			dispose();
     		}
     	};
@@ -11818,6 +12319,7 @@ var app = (function () {
     // (120:2) {#if multiline}
     function create_if_block$1(ctx) {
     	let textarea;
+    	let mounted;
     	let dispose;
 
     	const block = {
@@ -11833,17 +12335,20 @@ var app = (function () {
     			attr_dev(textarea, "placeholder", /*placeholder*/ ctx[3]);
     			add_location(textarea, file$3, 120, 4, 4181);
     		},
-    		m: function mount(target, anchor, remount) {
+    		m: function mount(target, anchor) {
     			insert_dev(target, textarea, anchor);
     			set_input_value(textarea, /*value*/ ctx[0]);
-    			if (remount) run_all(dispose);
 
-    			dispose = [
-    				listen_dev(textarea, "input", /*textarea_input_handler*/ ctx[15]),
-    				listen_dev(textarea, "keypress", /*handleKeyPress*/ ctx[10], false, false, false),
-    				listen_dev(textarea, "blur", /*stopTyping*/ ctx[8], false, false, false),
-    				listen_dev(textarea, "focus", /*focus*/ ctx[9], false, false, false)
-    			];
+    			if (!mounted) {
+    				dispose = [
+    					listen_dev(textarea, "input", /*textarea_input_handler*/ ctx[13]),
+    					listen_dev(textarea, "keypress", /*handleKeyPress*/ ctx[10], false, false, false),
+    					listen_dev(textarea, "blur", /*stopTyping*/ ctx[8], false, false, false),
+    					listen_dev(textarea, "focus", /*focus*/ ctx[9], false, false, false)
+    				];
+
+    				mounted = true;
+    			}
     		},
     		p: function update(ctx, dirty) {
     			if (dirty & /*rows*/ 128) {
@@ -11876,6 +12381,7 @@ var app = (function () {
     		},
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(textarea);
+    			mounted = false;
     			run_all(dispose);
     		}
     	};
@@ -12002,6 +12508,8 @@ var app = (function () {
     const CHARS_PER_LINE = 40;
 
     function instance$3($$self, $$props, $$invalidate) {
+    	let { $$slots: slots = {}, $$scope } = $$props;
+    	validate_slots("Input", slots, []);
     	let { ariaLabelledBy = null } = $$props;
     	let { ariaLabel = null } = $$props;
     	let { placeholder = null } = $$props;
@@ -12062,9 +12570,6 @@ var app = (function () {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<Input> was created with unknown prop '${key}'`);
     	});
 
-    	let { $$slots = {}, $$scope } = $$props;
-    	validate_slots("Input", $$slots, []);
-
     	function textarea_input_handler() {
     		value = this.value;
     		$$invalidate(0, value);
@@ -12075,7 +12580,7 @@ var app = (function () {
     		$$invalidate(0, value);
     	}
 
-    	$$self.$set = $$props => {
+    	$$self.$$set = $$props => {
     		if ("ariaLabelledBy" in $$props) $$invalidate(1, ariaLabelledBy = $$props.ariaLabelledBy);
     		if ("ariaLabel" in $$props) $$invalidate(2, ariaLabel = $$props.ariaLabel);
     		if ("placeholder" in $$props) $$invalidate(3, placeholder = $$props.placeholder);
@@ -12147,8 +12652,6 @@ var app = (function () {
     		handleKeyPress,
     		maxRows,
     		socket,
-    		calcRows,
-    		startTyping,
     		textarea_input_handler,
     		input_input_handler
     	];
@@ -12251,18 +12754,20 @@ var app = (function () {
     	}
     }
 
-    /* src/MessageInput.svelte generated by Svelte v3.21.0 */
+    /* src/MessageInput.svelte generated by Svelte v3.25.1 */
     const file$4 = "src/MessageInput.svelte";
 
     // (87:2) {#if textareaClass !='disabled'}
     function create_if_block_1$1(ctx) {
     	let form;
+    	let input;
     	let updating_value;
     	let current;
+    	let mounted;
     	let dispose;
 
     	function input_value_binding(value) {
-    		/*input_value_binding*/ ctx[9].call(null, value);
+    		/*input_value_binding*/ ctx[8].call(null, value);
     	}
 
     	let input_props = {
@@ -12278,7 +12783,7 @@ var app = (function () {
     		input_props.value = /*msgInput*/ ctx[2];
     	}
 
-    	const input = new Input({ props: input_props, $$inline: true });
+    	input = new Input({ props: input_props, $$inline: true });
     	binding_callbacks.push(() => bind(input, "value", input_value_binding));
 
     	const block = {
@@ -12289,12 +12794,15 @@ var app = (function () {
     			attr_dev(form, "autocomplete", "off");
     			add_location(form, file$4, 87, 4, 1759);
     		},
-    		m: function mount(target, anchor, remount) {
+    		m: function mount(target, anchor) {
     			insert_dev(target, form, anchor);
     			mount_component(input, form, null);
     			current = true;
-    			if (remount) dispose();
-    			dispose = listen_dev(form, "submit", prevent_default(/*submit_handler*/ ctx[10]), false, true, false);
+
+    			if (!mounted) {
+    				dispose = listen_dev(form, "submit", prevent_default(/*submit_handler*/ ctx[9]), false, true, false);
+    				mounted = true;
+    			}
     		},
     		p: function update(ctx, dirty) {
     			const input_changes = {};
@@ -12320,6 +12828,7 @@ var app = (function () {
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(form);
     			destroy_component(input);
+    			mounted = false;
     			dispose();
     		}
     	};
@@ -12341,6 +12850,7 @@ var app = (function () {
     	let t0;
     	let span;
     	let t2;
+    	let mounted;
     	let dispose;
 
     	const block = {
@@ -12355,17 +12865,21 @@ var app = (function () {
     			attr_dev(div, "class", "tips svelte-13n91az");
     			add_location(div, file$4, 108, 4, 2240);
     		},
-    		m: function mount(target, anchor, remount) {
+    		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
     			append_dev(div, t0);
     			append_dev(div, span);
     			append_dev(div, t2);
-    			if (remount) dispose();
-    			dispose = listen_dev(span, "click", /*click_handler*/ ctx[11], false, false, false);
+
+    			if (!mounted) {
+    				dispose = listen_dev(span, "click", /*click_handler*/ ctx[10], false, false, false);
+    				mounted = true;
+    			}
     		},
     		p: noop,
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(div);
+    			mounted = false;
     			dispose();
     		}
     	};
@@ -12477,6 +12991,8 @@ var app = (function () {
     }
 
     function instance$4($$self, $$props, $$invalidate) {
+    	let { $$slots: slots = {}, $$scope } = $$props;
+    	validate_slots("MessageInput", slots, []);
     	let { visitor } = $$props;
     	let { socket } = $$props;
     	let { _chats } = $$props;
@@ -12530,9 +13046,6 @@ var app = (function () {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<MessageInput> was created with unknown prop '${key}'`);
     	});
 
-    	let { $$slots = {}, $$scope } = $$props;
-    	validate_slots("MessageInput", $$slots, []);
-
     	function input_value_binding(value) {
     		msgInput = value;
     		$$invalidate(2, msgInput);
@@ -12547,7 +13060,7 @@ var app = (function () {
 
     	const click_handler = e => reinit();
 
-    	$$self.$set = $$props => {
+    	$$self.$$set = $$props => {
     		if ("visitor" in $$props) $$invalidate(5, visitor = $$props.visitor);
     		if ("socket" in $$props) $$invalidate(0, socket = $$props.socket);
     		if ("_chats" in $$props) $$invalidate(6, _chats = $$props._chats);
@@ -12595,7 +13108,6 @@ var app = (function () {
     		visitor,
     		_chats,
     		init,
-    		whisper,
     		input_value_binding,
     		submit_handler,
     		click_handler
@@ -12686,7 +13198,7 @@ var app = (function () {
     	}
     }
 
-    /* src/ui/Spinner.svelte generated by Svelte v3.21.0 */
+    /* src/ui/Spinner.svelte generated by Svelte v3.25.1 */
 
     const file$5 = "src/ui/Spinner.svelte";
 
@@ -12730,14 +13242,14 @@ var app = (function () {
     }
 
     function instance$5($$self, $$props) {
+    	let { $$slots: slots = {}, $$scope } = $$props;
+    	validate_slots("Spinner", slots, []);
     	const writable_props = [];
 
     	Object.keys($$props).forEach(key => {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console.warn(`<Spinner> was created with unknown prop '${key}'`);
     	});
 
-    	let { $$slots = {}, $$scope } = $$props;
-    	validate_slots("Spinner", $$slots, []);
     	return [];
     }
 
@@ -15154,7 +15666,7 @@ var app = (function () {
       return input.match(escapedStringRegExp)[1].replace(doubleQuoteRegExp, "'");
     }
 
-    /* src/App.svelte generated by Svelte v3.21.0 */
+    /* src/App.svelte generated by Svelte v3.25.1 */
 
     const { Object: Object_1, console: console_1 } = globals;
     const file$6 = "src/App.svelte";
@@ -15167,6 +15679,7 @@ var app = (function () {
 
     // (325:2) {#if _data}
     function create_if_block$3(ctx) {
+    	let nav;
     	let t0;
     	let main_1;
     	let t1;
@@ -15174,12 +15687,14 @@ var app = (function () {
     	let each_1_lookup = new Map();
     	let t2;
     	let t3;
+    	let messageinput;
     	let t4;
     	let if_block2_anchor;
     	let current;
+    	let mounted;
     	let dispose;
 
-    	const nav = new Nav({
+    	nav = new Nav({
     			props: {
     				$$slots: { default: [create_default_slot_1] },
     				$$scope: { ctx }
@@ -15201,7 +15716,7 @@ var app = (function () {
 
     	let if_block1 = /*typing*/ ctx[10] && create_if_block_2(ctx);
 
-    	const messageinput = new MessageInput({
+    	messageinput = new MessageInput({
     			props: {
     				textareaClass: /*textareaClass*/ ctx[4],
     				visitor: /*visitor*/ ctx[0],
@@ -15212,7 +15727,7 @@ var app = (function () {
     			$$inline: true
     		});
 
-    	messageinput.$on("message", /*message_handler*/ ctx[26]);
+    	messageinput.$on("message", /*message_handler*/ ctx[17]);
     	let if_block2 = /*showScrollToBottom*/ ctx[7] && create_if_block_1$2(ctx);
 
     	const block = {
@@ -15237,7 +15752,7 @@ var app = (function () {
     			attr_dev(main_1, "class", "svelte-4opjxd");
     			add_location(main_1, file$6, 347, 4, 10168);
     		},
-    		m: function mount(target, anchor, remount) {
+    		m: function mount(target, anchor) {
     			mount_component(nav, target, anchor);
     			insert_dev(target, t0, anchor);
     			insert_dev(target, main_1, anchor);
@@ -15250,15 +15765,18 @@ var app = (function () {
 
     			append_dev(main_1, t2);
     			if (if_block1) if_block1.m(main_1, null);
-    			/*main_1_binding*/ ctx[25](main_1);
+    			/*main_1_binding*/ ctx[16](main_1);
     			insert_dev(target, t3, anchor);
     			mount_component(messageinput, target, anchor);
     			insert_dev(target, t4, anchor);
     			if (if_block2) if_block2.m(target, anchor);
     			insert_dev(target, if_block2_anchor, anchor);
     			current = true;
-    			if (remount) dispose();
-    			dispose = listen_dev(main_1, "scroll", /*handleScroll*/ ctx[14], false, false, false);
+
+    			if (!mounted) {
+    				dispose = listen_dev(main_1, "scroll", /*handleScroll*/ ctx[14], false, false, false);
+    				mounted = true;
+    			}
     		},
     		p: function update(ctx, dirty) {
     			const nav_changes = {};
@@ -15367,12 +15885,13 @@ var app = (function () {
     			}
 
     			if (if_block1) if_block1.d();
-    			/*main_1_binding*/ ctx[25](null);
+    			/*main_1_binding*/ ctx[16](null);
     			if (detaching) detach_dev(t3);
     			destroy_component(messageinput, detaching);
     			if (detaching) detach_dev(t4);
     			if (if_block2) if_block2.d(detaching);
     			if (detaching) detach_dev(if_block2_anchor);
+    			mounted = false;
     			dispose();
     		}
     	};
@@ -15608,8 +16127,9 @@ var app = (function () {
 
     // (349:6) {#if isLoading}
     function create_if_block_7(ctx) {
+    	let spinner;
     	let current;
-    	const spinner = new Spinner({ $$inline: true });
+    	spinner = new Spinner({ $$inline: true });
 
     	const block = {
     		c: function create() {
@@ -16114,9 +16634,10 @@ var app = (function () {
 
     // (460:4) {#if showScrollToBottom}
     function create_if_block_1$2(ctx) {
+    	let scrolltobottom;
     	let current;
 
-    	const scrolltobottom = new ScrollToBottom({
+    	scrolltobottom = new ScrollToBottom({
     			props: { onScroll: /*scrollToBottom*/ ctx[13] },
     			$$inline: true
     		});
@@ -16222,9 +16743,10 @@ var app = (function () {
     }
 
     function create_fragment$6(ctx) {
+    	let page;
     	let current;
 
-    	const page = new Page({
+    	page = new Page({
     			props: {
     				$$slots: { default: [create_default_slot] },
     				$$scope: { ctx }
@@ -16283,6 +16805,8 @@ var app = (function () {
     	let $user;
     	validate_store(user, "user");
     	component_subscribe($$self, user, $$value => $$invalidate(12, $user = $$value));
+    	let { $$slots: slots = {}, $$scope } = $$props;
+    	validate_slots("App", slots, []);
     	let { visitor = null } = $$props;
     	let { _data = null } = $$props;
     	let { _user = null } = $$props;
@@ -16458,12 +16982,10 @@ var app = (function () {
     		if (!~writable_props.indexOf(key) && key.slice(0, 2) !== "$$") console_1.warn(`<App> was created with unknown prop '${key}'`);
     	});
 
-    	let { $$slots = {}, $$scope } = $$props;
-    	validate_slots("App", $$slots, []);
-
     	function main_1_binding($$value) {
     		binding_callbacks[$$value ? "unshift" : "push"](() => {
-    			$$invalidate(8, main = $$value);
+    			main = $$value;
+    			$$invalidate(8, main);
     		});
     	}
 
@@ -16473,7 +16995,7 @@ var app = (function () {
     		scrollToBottom();
     	};
 
-    	$$self.$set = $$props => {
+    	$$self.$$set = $$props => {
     		if ("visitor" in $$props) $$invalidate(0, visitor = $$props.visitor);
     		if ("_data" in $$props) $$invalidate(1, _data = $$props._data);
     		if ("_user" in $$props) $$invalidate(2, _user = $$props._user);
@@ -16593,15 +17115,6 @@ var app = (function () {
     		scrollToBottom,
     		handleScroll,
     		handleNewMessage,
-    		echo,
-    		autoscroll,
-    		timeout,
-    		showMessages,
-    		store,
-    		startTyping,
-    		stopTyping,
-    		send,
-    		receive,
     		main_1_binding,
     		message_handler
     	];
