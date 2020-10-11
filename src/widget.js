@@ -1,43 +1,43 @@
-
 let kefu = {
   chat: {
     options: {},
     iframe: null,
     initIframeDom: function () {
-      kefu.chat.iframe.contentDocument.writeln([
-        '<!DOCTYPE html>',
-        '<html lang="en">',
-        '<head>',
+      let script = document.createElement("script");
+      script.src = kefu.chat.options.asset_origin + "bundle.js";
+      kefu.chat.iframe.contentDocument.head.innerHTML = [
         '<meta charset="utf-8" />',
         '<meta name="viewport" content="width=device-width,initial-scale=1" />',
         '<meta name="theme-color" content="#ffffff" />',
-        '<title>对话</title>',
-        '<link rel="stylesheet" href="' + kefu.chat.options.asset_origin + 'global.css" />',
-        '<link rel="stylesheet" href="' + kefu.chat.options.asset_origin + 'bundle.css" />',
-        '</head>',
-        '<body>',
-        '<p class="loading-bundle"> Loading bundle... You need JavaScript for this. <div class="centered">',
+        "<title>对话</title>",
+        '<link rel="stylesheet" href="' +
+          kefu.chat.options.asset_origin +
+          'global.css" />',
+        '<link rel="stylesheet" href="' +
+          kefu.chat.options.asset_origin +
+          'bundle.css" />',
+      ].join("");
+      kefu.chat.iframe.contentDocument.body.innerHTML = [
         '<div class="loadingspinner">',
-        '</div>',
-        '</p>',
-        '<script>',
-        'window.parameters = ' + JSON.stringify(kefu.chat.options) + ';',
-        '</script>',
-        '<script async src="' + kefu.chat.options.asset_origin + 'bundle.js"></script>',
-        '</body>',
-        '</html>'
-      ].join(''));
+        "</div>",
+      ].join("");
+      kefu.chat.iframe.contentDocument.parameters = kefu.chat.options;
+      kefu.chat.iframe.contentDocument.body.appendChild(script);
     },
     init: function (conf) {
-      let _kefuchat_init = (window)._kefuchat_init;
+      let _kefuchat_init = window._kefuchat_init;
 
-      if (_kefuchat_init && 'function' == typeof _kefuchat_init) {
+      if (_kefuchat_init && "function" == typeof _kefuchat_init) {
         let diy = _kefuchat_init();
         for (let i in diy) {
-          if (diy[i] != null && 'string' != typeof diy[i] && 'number' != typeof diy[i]) {
-            throw i + ' must a string'
+          if (
+            diy[i] != null &&
+            "string" != typeof diy[i] &&
+            "number" != typeof diy[i]
+          ) {
+            throw i + " must a string";
           }
-          conf[i] = diy[i]
+          conf[i] = diy[i];
         }
       }
 
@@ -48,19 +48,25 @@ let kefu = {
       if (!kefu.chat.options.unique_id) {
         if (localStorage) {
           if (!localStorage.kefuchat_unique_id) {
-            localStorage.kefuchat_unique_id = parseInt((Math.random() * 99999).toString());
+            localStorage.kefuchat_unique_id = parseInt(
+              (Math.random() * 99999).toString()
+            );
           }
-          kefu.chat.options.unique_id = localStorage.kefuchat_unique_id
+          kefu.chat.options.unique_id = localStorage.kefuchat_unique_id;
         } else {
           if (!document.cookie.match(/kefuchat_unique_id\=(^[;])/)) {
-            document.cookie = 'kefuchat_unique_id=' + parseInt((Math.random() * 99999).toString());
+            document.cookie =
+              "kefuchat_unique_id=" +
+              parseInt((Math.random() * 99999).toString());
           }
-          kefu.chat.options.unique_id = document.cookie.match(/kefuchat_unique_id\=(^[;])/)[1]
+          kefu.chat.options.unique_id = document.cookie.match(
+            /kefuchat_unique_id\=(^[;])/
+          )[1];
         }
       }
 
       if (!kefu.chat.options.name) {
-        kefu.chat.options.name = '访客' + kefu.chat.options.unique_id;
+        kefu.chat.options.name = "访客" + kefu.chat.options.unique_id;
       }
 
       let askNotificationPermission = () => {
@@ -73,114 +79,123 @@ let kefu = {
             permissionResult.then(resolve, reject);
           }
         });
-      }
+      };
       let createDiv = (__cls) => {
-        let div = document.createElement('div');
+        let div = document.createElement("div");
         div.className = __cls;
         return div;
-      }
+      };
 
       let installDom = () => {
-        let container = createDiv('kefuchat');
+        let container = createDiv("kefuchat");
         document.body.appendChild(container);
 
-        let chat = createDiv('kefuchat-chat');
+        let chat = createDiv("kefuchat-chat");
         container.appendChild(chat);
 
-        let close = createDiv('kefuchat-close');
+        let close = createDiv("kefuchat-close");
         chat.appendChild(close);
 
-        let opener = createDiv('kefuchat-opener');
+        let opener = createDiv("kefuchat-opener");
         container.appendChild(opener);
 
-        let logo = createDiv('kefuchat-logo');
-        let badge = createDiv('kefuchat-badge');
+        let logo = createDiv("kefuchat-logo");
+        let badge = createDiv("kefuchat-badge");
         if (!kefu.chat.iframe) {
-          kefu.chat.iframe = document.createElement('iframe');
+          kefu.chat.iframe = document.createElement("iframe");
           chat.appendChild(kefu.chat.iframe);
-          kefu.chat.iframe.className = 'kefuchat-iframe';
-          setTimeout(kefu.chat.initIframeDom, 1000);
+          kefu.chat.iframe.className = "kefuchat-iframe";
         }
         let iframe = kefu.chat.iframe;
-        let kfdesc = createDiv('kefuchat-kfdesc');
-        kfdesc.innerText = '客服在线, 来咨询吧'
+        let kfdesc = createDiv("kefuchat-kfdesc");
+        kfdesc.innerText = "客服在线, 来咨询吧";
         //iframe.src = kefu.chat.options.chat_origin + '?institution_id=' + kefu.chat.options.institution_id + '&unique_id=' + kefu.chat.options.unique_id + '&userAgent=' + encodeURIComponent(kefu.chat.options.userAgent) + '&languages[]=' + kefu.chat.options.language + '&url=' + encodeURIComponent(kefu.chat.options.url) + '&name=' + encodeURIComponent(kefu.chat.options.name) + '&referer=' + encodeURIComponent(kefu.chat.options.referer);
 
-
-        opener.style.display = 'none'
-        chat.style.display = 'none'
+        opener.style.display = "none";
+        chat.style.display = "none";
 
         opener.appendChild(kfdesc);
         opener.appendChild(logo);
         opener.appendChild(badge);
-      }
+      };
 
       let installCss = () => {
-        let css = document.createElement('link');
-        css.href = kefu.chat.options.asset_origin + 'widget.css';
-        css.rel = 'stylesheet';
+        let css = document.createElement("link");
+        css.href = kefu.chat.options.asset_origin + "widget.css";
+        css.rel = "stylesheet";
         css.onload = () => {
-          document.querySelector('.kefuchat-opener').style.display = 'block';
-          if ('function' == typeof (window).onloadKefuchat) {
-            (window).onloadKefuchat()
+          document.querySelector(".kefuchat-opener").style.display = "block";
+          if ("function" == typeof window.onloadKefuchat) {
+            window.onloadKefuchat();
           }
         };
         document.head.appendChild(css);
       };
 
-      (window).openKefuchat = () => {
-        askNotificationPermission().then(() => { });
-        (document.querySelector('.kefuchat-opener')).style.display = 'none'; (document.querySelector('.kefuchat-chat')).style.display = 'block';
+      window.openKefuchat = () => {
+        askNotificationPermission().then(() => {});
+        document.querySelector(".kefuchat-opener").style.display = "none";
+        document.querySelector(".kefuchat-chat").style.display = "block";
       };
 
-      (window).closeKefuchat = () => {
-        (document.querySelector('.kefuchat-chat')).style.display = 'none'; (document.querySelector('.kefuchat-opener')).style.display = 'block'
+      window.closeKefuchat = () => {
+        document.querySelector(".kefuchat-chat").style.display = "none";
+        document.querySelector(".kefuchat-opener").style.display = "block";
       };
 
       let bindEvent = () => {
-        document.querySelector('.kefuchat-opener').addEventListener('click', (window).openKefuchat);
-        document.querySelector('.kefuchat-close').addEventListener('click', (window).closeKefuchat);
+        document
+          .querySelector(".kefuchat-opener")
+          .addEventListener("click", window.openKefuchat);
+        document
+          .querySelector(".kefuchat-close")
+          .addEventListener("click", window.closeKefuchat);
       };
 
       let registerNotification = () => {
-        window.addEventListener("message", (message) => {
-          console.log(message);
-          if (message.data.action == 'showNotification') {
-            askNotificationPermission().then(() => {
-              let msg = message.data.msg;
-              let body, image;
+        window.addEventListener(
+          "message",
+          (message) => {
+            console.log(message);
+            if (message.data.action == "showNotification") {
+              askNotificationPermission().then(() => {
+                let msg = message.data.msg;
+                let body, image;
 
-              if (msg.type == 1) {
-                body = msg.content;
-              }
-              if (msg.type == 2) {
-                body = "[图片消息]";
-                image = msg.content;
-              }
+                if (msg.type == 1) {
+                  body = msg.content;
+                }
+                if (msg.type == 2) {
+                  body = "[图片消息]";
+                  image = msg.content;
+                }
 
-              let notify = new Notification("您收到新消息", {
-                body,
-                image,
-                vibrate: 1,
+                let notify = new Notification("您收到新消息", {
+                  body,
+                  image,
+                  vibrate: 1,
+                });
+
+                notify.onclick = () => {
+                  const o = window;
+                  o.focus();
+                  o.openKefuchat();
+
+                  setTimeout(() => {
+                    notify.close();
+                  }, 200);
+                };
               });
-
-              notify.onclick = () => {
-                const o = window;
-                o.focus();
-                (o).openKefuchat();
-
-                setTimeout(() => {
-                  notify.close();
-                }, 200);
-              };
-            });
-          }
-        }, false);
+            }
+          },
+          false
+        );
       };
 
       registerNotification();
       installDom();
       installCss();
+      kefu.chat.initIframeDom();
       bindEvent();
     },
 
@@ -219,9 +234,7 @@ let kefu = {
       kefu.chat.init(conf);
     },
 
-    say: (msg) => {
-
-    },
+    say: (msg) => {},
 
     open: (msg) => {
       window.openKefuchat();
@@ -230,7 +243,7 @@ let kefu = {
     close: () => {
       window.closeKefuchat();
     },
-  }
+  },
 };
 
 kefu.chat.load();

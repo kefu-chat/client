@@ -44,7 +44,7 @@
       url: `api/visitor/init`,
       method: "POST",
       data: {
-        ...window.parameters,
+        ...document.parameters,
         // institution_id: window.parameters.institution_id, //"rxpXD6uDD0EJqvbD",
         // unique_id: window.parameters.unique_id, //parseInt(Math.random()*9999999).toString(),
         // userAgent: window.parameters.userAgent, //navigator.userAgent,
