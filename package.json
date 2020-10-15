@@ -6,8 +6,8 @@
     "build": "npm run widget && rollup -c && workbox injectManifest workbox-config.js",
     "dev": "npm run widget_dev && rollup -c -w",
     "bundle": "cross-env APP_ENV=production webpack --config webpack.extract.config.js --optimize-minimize --mode production",
-    "widget": "cross-env APP_ENV=production webpack --config webpack.widget.config.js --optimize-minimize --mode production && cp src/widget.css public/build/ && cp public/global.css public/build/ && cp public/*.svg public/build/ && cp public/demo.html public/build/ && cp src/widget.css public/",
-    "widget_dev": "webpack --config webpack.widget.config.js && cp src/widget.css public/build/ && cp public/global.css public/build/ && cp public/*.svg public/build/ && cp public/demo.html public/build/ && cp src/widget.css public/",
+    "widget": "cross-env APP_ENV=production webpack --config webpack.widget.config.js --optimize-minimize --mode production && cp src/*.css public/build/ && cp public/global.css public/build/ && cp public/*.svg public/build/ && cp public/demo.html public/build/ && cp src/*.css public/",
+    "widget_dev": "webpack --config webpack.widget.config.js && cp src/*.css public/build/ && cp public/global.css public/build/ && cp public/*.svg public/build/ && cp public/demo.html public/build/ && cp src/*.css public/",
     "start": "sirv public"
   },
   "devDependencies": {

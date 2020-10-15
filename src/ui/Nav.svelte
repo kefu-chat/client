@@ -3,9 +3,10 @@
   export let showBack = false;
   export let backText = null;
   const dispatch = createEventDispatcher();
+  export let theme = 'theme-' + (document.parameters.theme || 'default');
 </script>
 
-<nav>
+<nav class="{theme}">
   {#if showBack}
     <button on:click={() => dispatch('back')}>
       <svg
@@ -39,7 +40,6 @@
     top: 0;
     margin: 0;
     display: flex;
-    background: linear-gradient(95deg, rgb(0, 33, 163) 20%, rgb(0, 110, 255) 80%);
     color: #fff;
     height: 70px;
   }

@@ -1,0 +1,59 @@
+.theme-default {
+  background: linear-gradient(95deg, rgb(47, 50, 74) 20%, rgb(66, 72, 103) 80%);
+}
+
+.theme-blue1 {
+  background: linear-gradient(95deg, rgb(0, 33, 163) 20%, rgb(0, 110, 255) 80%);
+}
+
+.theme-blue2 {
+  background: linear-gradient(95deg, rgb(0, 85, 201) 20%, rgb(24, 185, 212) 80%);
+}
+
+.theme-blue-purple {
+  background: linear-gradient(95deg, rgb(91, 61, 166) 20%, rgb(130, 168, 251) 80%);
+}
+
+.theme-purple {
+  background: linear-gradient(95deg, rgb(64, 29, 186) 20%, rgb(130, 91, 240) 80%);
+}
+
+.theme-pink {
+  background: linear-gradient(95deg, rgb(255, 78, 111) 20%, rgb(251, 145, 104) 80%);
+}
+
+.theme-dark {
+  background: linear-gradient(95deg, rgb(41, 50, 60) 20%, rgb(72, 85, 99) 80%);
+}
+
+.theme-cyan {
+  background: linear-gradient(95deg, rgb(10, 14, 136) 20%, rgb(0, 177, 206) 80%);
+}
+
+.theme-red1 {
+  background: linear-gradient(95deg, rgb(255, 126, 0) 20%, rgb(201, 38, 74) 80%);
+}
+
+.theme-red2 {
+  background: linear-gradient(95deg, rgb(255, 106, 0) 20%, rgb(238, 9, 121) 80%);
+}
+
+.theme-red3 {
+  background: linear-gradient(95deg, rgb(51, 51, 51) 20%, rgb(221, 24, 24) 80%);
+}
+
+.theme-green1 {
+  background: linear-gradient(95deg, rgb(6, 129, 29) 20%, rgb(79, 203, 12) 80%);
+}
+
+.theme-green2 {
+  background: linear-gradient(95deg, rgb(17, 153, 142) 20%, rgb(56, 239, 125) 80%);
+}
+
+.theme-green3 {
+  background: linear-gradient(95deg, rgb(40, 60, 134) 20%, rgb(69, 162, 71) 80%);
+}
+
+.theme-blue-light {
+  background: linear-gradient(95deg, rgb(172, 224, 249) 20%, rgb(255, 241, 235) 80%);
+}

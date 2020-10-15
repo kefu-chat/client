@@ -10,12 +10,9 @@ let kefu = {
         '<meta name="viewport" content="width=device-width,initial-scale=1" />',
         '<meta name="theme-color" content="#ffffff" />',
         "<title>对话</title>",
-        '<link rel="stylesheet" href="' +
-          kefu.chat.options.asset_origin +
-          'global.css" />',
-        '<link rel="stylesheet" href="' +
-          kefu.chat.options.asset_origin +
-          'bundle.css" />',
+        '<link rel="stylesheet" href="' + kefu.chat.options.asset_origin + 'global.css" />',
+        '<link rel="stylesheet" href="' + kefu.chat.options.asset_origin + 'bundle.css" />',
+        '<link rel="stylesheet" href="' + kefu.chat.options.asset_origin + 'theme.css" />',
       ].join("");
       kefu.chat.iframe.contentDocument.body.innerHTML = [
         '<div class="loadingspinner">',
@@ -96,7 +93,7 @@ let kefu = {
         let close = createDiv("kefuchat-close");
         chat.appendChild(close);
 
-        let opener = createDiv("kefuchat-opener");
+        let opener = createDiv("kefuchat-opener theme-" + (kefu.chat.options.theme || 'default'));
         container.appendChild(opener);
 
         let logo = createDiv("kefuchat-logo");
@@ -120,6 +117,11 @@ let kefu = {
       };
 
       let installCss = () => {
+        let themeCss = document.createElement("link");
+        themeCss.href = kefu.chat.options.asset_origin + "theme.css";
+        themeCss.rel = "stylesheet";
+        document.head.appendChild(themeCss);
+
         let css = document.createElement("link");
         css.href = kefu.chat.options.asset_origin + "widget.css";
         css.rel = "stylesheet";
