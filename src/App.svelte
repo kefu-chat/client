@@ -33,6 +33,7 @@
   let typing = false;
   let typingUser = null;
   let timeout;
+  let channel;
   const ADD_ON_SCROLL = 50; // messages to add when scrolling to the top
   let showMessages = 100; // initial messages to load
 
@@ -63,9 +64,18 @@
     localStorage.setItem("conversation_id", conversation_id);
     _data = data;
 
+    if (channel && reopen && echo && socket) {
+      try {
+        echo.leave(channel);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
     if (conversation_id) {
       setTimeout(async () => {
-        const channel = `conversation.${conversation_id}`;
+        channel = `conversation.${conversation_id}`;
+
         echo = new Echo({
           broadcaster: "socket.io",
           host: SOCKET_HOST,
