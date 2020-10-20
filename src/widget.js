@@ -100,7 +100,7 @@ let kefu = {
 
         let logo = new Image;
         logo.className = 'kefuchat-logo';
-        logo.src = kefu.chat.options.asset_origin + '/logo.svg';
+        logo.src = kefu.chat.options.asset_origin + 'logo.svg';
         let badge = createDiv("kefuchat-badge");
         if (!kefu.chat.iframe) {
           kefu.chat.iframe = document.createElement("iframe");
