@@ -2198,6 +2198,12 @@ var app = (function () {
           callbacks.splice(i, 1);
           break;
         }
+      } // Remove event specific arrays for event types that no
+      // one is subscribed for to avoid memory leak.
+
+
+      if (callbacks.length === 0) {
+        delete this._callbacks['$' + event];
       }
 
       return this;
@@ -2213,8 +2219,12 @@ var app = (function () {
 
     Emitter.prototype.emit = function (event) {
       this._callbacks = this._callbacks || {};
-      var args = [].slice.call(arguments, 1),
+      var args = new Array(arguments.length - 1),
           callbacks = this._callbacks['$' + event];
+
+      for (var i = 1; i < arguments.length; i++) {
+        args[i - 1] = arguments[i];
+      }
 
       if (callbacks) {
         callbacks = callbacks.slice(0);
@@ -3317,15 +3327,7 @@ var app = (function () {
      * Copyright (c) 2012 Niklas von Hertzen
      * Licensed under the MIT license.
      */
-    (function () {
-
-      var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"; // Use a lookup table to find the index.
-
-      var lookup = new Uint8Array(256);
-
-      for (var i = 0; i < chars.length; i++) {
-        lookup[chars.charCodeAt(i)] = i;
-      }
+    (function (chars) {
 
       exports.encode = function (arraybuffer) {
         var bytes = new Uint8Array(arraybuffer),
@@ -3371,10 +3373,10 @@ var app = (function () {
             bytes = new Uint8Array(arraybuffer);
 
         for (i = 0; i < len; i += 4) {
-          encoded1 = lookup[base64.charCodeAt(i)];
-          encoded2 = lookup[base64.charCodeAt(i + 1)];
-          encoded3 = lookup[base64.charCodeAt(i + 2)];
-          encoded4 = lookup[base64.charCodeAt(i + 3)];
+          encoded1 = chars.indexOf(base64[i]);
+          encoded2 = chars.indexOf(base64[i + 1]);
+          encoded3 = chars.indexOf(base64[i + 2]);
+          encoded4 = chars.indexOf(base64[i + 3]);
           bytes[p++] = encoded1 << 2 | encoded2 >> 4;
           bytes[p++] = (encoded2 & 15) << 4 | encoded3 >> 2;
           bytes[p++] = (encoded3 & 3) << 6 | encoded4 & 63;
@@ -3382,7 +3384,7 @@ var app = (function () {
 
         return arraybuffer;
       };
-    })();
+    })("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/");
     });
     var base64Arraybuffer_1 = base64Arraybuffer.encode;
     var base64Arraybuffer_2 = base64Arraybuffer.decode;
@@ -4144,177 +4146,6 @@ var app = (function () {
     var browser_10 = browser$2.encodePayloadAsBlob;
     var browser_11 = browser$2.decodePayloadAsBinary;
 
-    var componentEmitter$1 = createCommonjsModule(function (module) {
-    /**
-     * Expose `Emitter`.
-     */
-    {
-      module.exports = Emitter;
-    }
-    /**
-     * Initialize a new `Emitter`.
-     *
-     * @api public
-     */
-
-
-    function Emitter(obj) {
-      if (obj) return mixin(obj);
-    }
-    /**
-     * Mixin the emitter properties.
-     *
-     * @param {Object} obj
-     * @return {Object}
-     * @api private
-     */
-
-    function mixin(obj) {
-      for (var key in Emitter.prototype) {
-        obj[key] = Emitter.prototype[key];
-      }
-
-      return obj;
-    }
-    /**
-     * Listen on the given `event` with `fn`.
-     *
-     * @param {String} event
-     * @param {Function} fn
-     * @return {Emitter}
-     * @api public
-     */
-
-
-    Emitter.prototype.on = Emitter.prototype.addEventListener = function (event, fn) {
-      this._callbacks = this._callbacks || {};
-      (this._callbacks['$' + event] = this._callbacks['$' + event] || []).push(fn);
-      return this;
-    };
-    /**
-     * Adds an `event` listener that will be invoked a single
-     * time then automatically removed.
-     *
-     * @param {String} event
-     * @param {Function} fn
-     * @return {Emitter}
-     * @api public
-     */
-
-
-    Emitter.prototype.once = function (event, fn) {
-      function on() {
-        this.off(event, on);
-        fn.apply(this, arguments);
-      }
-
-      on.fn = fn;
-      this.on(event, on);
-      return this;
-    };
-    /**
-     * Remove the given callback for `event` or all
-     * registered callbacks.
-     *
-     * @param {String} event
-     * @param {Function} fn
-     * @return {Emitter}
-     * @api public
-     */
-
-
-    Emitter.prototype.off = Emitter.prototype.removeListener = Emitter.prototype.removeAllListeners = Emitter.prototype.removeEventListener = function (event, fn) {
-      this._callbacks = this._callbacks || {}; // all
-
-      if (0 == arguments.length) {
-        this._callbacks = {};
-        return this;
-      } // specific event
-
-
-      var callbacks = this._callbacks['$' + event];
-      if (!callbacks) return this; // remove all handlers
-
-      if (1 == arguments.length) {
-        delete this._callbacks['$' + event];
-        return this;
-      } // remove specific handler
-
-
-      var cb;
-
-      for (var i = 0; i < callbacks.length; i++) {
-        cb = callbacks[i];
-
-        if (cb === fn || cb.fn === fn) {
-          callbacks.splice(i, 1);
-          break;
-        }
-      } // Remove event specific arrays for event types that no
-      // one is subscribed for to avoid memory leak.
-
-
-      if (callbacks.length === 0) {
-        delete this._callbacks['$' + event];
-      }
-
-      return this;
-    };
-    /**
-     * Emit `event` with the given args.
-     *
-     * @param {String} event
-     * @param {Mixed} ...
-     * @return {Emitter}
-     */
-
-
-    Emitter.prototype.emit = function (event) {
-      this._callbacks = this._callbacks || {};
-      var args = new Array(arguments.length - 1),
-          callbacks = this._callbacks['$' + event];
-
-      for (var i = 1; i < arguments.length; i++) {
-        args[i - 1] = arguments[i];
-      }
-
-      if (callbacks) {
-        callbacks = callbacks.slice(0);
-
-        for (var i = 0, len = callbacks.length; i < len; ++i) {
-          callbacks[i].apply(this, args);
-        }
-      }
-
-      return this;
-    };
-    /**
-     * Return array of callbacks for `event`.
-     *
-     * @param {String} event
-     * @return {Array}
-     * @api public
-     */
-
-
-    Emitter.prototype.listeners = function (event) {
-      this._callbacks = this._callbacks || {};
-      return this._callbacks['$' + event] || [];
-    };
-    /**
-     * Check if this emitter has `event` handlers.
-     *
-     * @param {String} event
-     * @return {Boolean}
-     * @api public
-     */
-
-
-    Emitter.prototype.hasListeners = function (event) {
-      return !!this.listeners(event).length;
-    };
-    });
-
     /**
      * Module dependencies.
      */
@@ -4367,7 +4198,7 @@ var app = (function () {
      */
 
 
-    componentEmitter$1(Transport.prototype);
+    componentEmitter(Transport.prototype);
     /**
      * Emits an error.
      *
@@ -4592,458 +4423,251 @@ var app = (function () {
     yeast.decode = decode$1;
     var yeast_1 = yeast;
 
+    var debug$3 = createCommonjsModule(function (module, exports) {
     /**
-     * Helpers.
+     * This is the common logic for both the Node.js and web browser
+     * implementations of `debug()`.
+     *
+     * Expose `debug()` as the module.
      */
-    var s$1 = 1000;
-    var m$1 = s$1 * 60;
-    var h$1 = m$1 * 60;
-    var d$1 = h$1 * 24;
-    var w = d$1 * 7;
-    var y$1 = d$1 * 365.25;
+    exports = module.exports = createDebug.debug = createDebug['default'] = createDebug;
+    exports.coerce = coerce;
+    exports.disable = disable;
+    exports.enable = enable;
+    exports.enabled = enabled;
+    exports.humanize = ms;
     /**
-     * Parse or format the given `val`.
-     *
-     * Options:
-     *
-     *  - `long` verbose formatting [false]
-     *
-     * @param {String|Number} val
-     * @param {Object} [options]
-     * @throws {Error} throw an error if val is not a non-empty string or a number
-     * @return {String|Number}
-     * @api public
+     * Active `debug` instances.
      */
 
-    var ms$1 = function (val, options) {
-      options = options || {};
-      var type = typeof val;
-
-      if (type === 'string' && val.length > 0) {
-        return parse$1(val);
-      } else if (type === 'number' && isFinite(val)) {
-        return options.long ? fmtLong$1(val) : fmtShort$1(val);
-      }
-
-      throw new Error('val is not a non-empty string or a valid number. val=' + JSON.stringify(val));
-    };
+    exports.instances = [];
     /**
-     * Parse the given `str` and return milliseconds.
+     * The currently active debug mode names, and names to skip.
+     */
+
+    exports.names = [];
+    exports.skips = [];
+    /**
+     * Map of special "%n" handling functions, for the debug "format" argument.
      *
-     * @param {String} str
+     * Valid key names are a single, lower or upper-case letter, i.e. "n" and "N".
+     */
+
+    exports.formatters = {};
+    /**
+     * Select a color.
+     * @param {String} namespace
      * @return {Number}
      * @api private
      */
 
+    function selectColor(namespace) {
+      var hash = 0,
+          i;
 
-    function parse$1(str) {
-      str = String(str);
-
-      if (str.length > 100) {
-        return;
+      for (i in namespace) {
+        hash = (hash << 5) - hash + namespace.charCodeAt(i);
+        hash |= 0; // Convert to 32bit integer
       }
 
-      var match = /^(-?(?:\d+)?\.?\d+) *(milliseconds?|msecs?|ms|seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|h|days?|d|weeks?|w|years?|yrs?|y)?$/i.exec(str);
+      return exports.colors[Math.abs(hash) % exports.colors.length];
+    }
+    /**
+     * Create a debugger with the given `namespace`.
+     *
+     * @param {String} namespace
+     * @return {Function}
+     * @api public
+     */
 
-      if (!match) {
-        return;
+
+    function createDebug(namespace) {
+      var prevTime;
+
+      function debug() {
+        // disabled?
+        if (!debug.enabled) return;
+        var self = debug; // set `diff` timestamp
+
+        var curr = +new Date();
+        var ms = curr - (prevTime || curr);
+        self.diff = ms;
+        self.prev = prevTime;
+        self.curr = curr;
+        prevTime = curr; // turn the `arguments` into a proper Array
+
+        var args = new Array(arguments.length);
+
+        for (var i = 0; i < args.length; i++) {
+          args[i] = arguments[i];
+        }
+
+        args[0] = exports.coerce(args[0]);
+
+        if ('string' !== typeof args[0]) {
+          // anything else let's inspect with %O
+          args.unshift('%O');
+        } // apply any `formatters` transformations
+
+
+        var index = 0;
+        args[0] = args[0].replace(/%([a-zA-Z%])/g, function (match, format) {
+          // if we encounter an escaped % then don't increase the array index
+          if (match === '%%') return match;
+          index++;
+          var formatter = exports.formatters[format];
+
+          if ('function' === typeof formatter) {
+            var val = args[index];
+            match = formatter.call(self, val); // now we need to remove `args[index]` since it's inlined in the `format`
+
+            args.splice(index, 1);
+            index--;
+          }
+
+          return match;
+        }); // apply env-specific formatting (colors, etc.)
+
+        exports.formatArgs.call(self, args);
+        var logFn = debug.log || exports.log || console.log.bind(console);
+        logFn.apply(self, args);
       }
 
-      var n = parseFloat(match[1]);
-      var type = (match[2] || 'ms').toLowerCase();
+      debug.namespace = namespace;
+      debug.enabled = exports.enabled(namespace);
+      debug.useColors = exports.useColors();
+      debug.color = selectColor(namespace);
+      debug.destroy = destroy; // env-specific initialization logic for debug instances
 
-      switch (type) {
-        case 'years':
-        case 'year':
-        case 'yrs':
-        case 'yr':
-        case 'y':
-          return n * y$1;
+      if ('function' === typeof exports.init) {
+        exports.init(debug);
+      }
 
-        case 'weeks':
-        case 'week':
-        case 'w':
-          return n * w;
+      exports.instances.push(debug);
+      return debug;
+    }
 
-        case 'days':
-        case 'day':
-        case 'd':
-          return n * d$1;
+    function destroy() {
+      var index = exports.instances.indexOf(this);
 
-        case 'hours':
-        case 'hour':
-        case 'hrs':
-        case 'hr':
-        case 'h':
-          return n * h$1;
-
-        case 'minutes':
-        case 'minute':
-        case 'mins':
-        case 'min':
-        case 'm':
-          return n * m$1;
-
-        case 'seconds':
-        case 'second':
-        case 'secs':
-        case 'sec':
-        case 's':
-          return n * s$1;
-
-        case 'milliseconds':
-        case 'millisecond':
-        case 'msecs':
-        case 'msec':
-        case 'ms':
-          return n;
-
-        default:
-          return undefined;
+      if (index !== -1) {
+        exports.instances.splice(index, 1);
+        return true;
+      } else {
+        return false;
       }
     }
     /**
-     * Short format for `ms`.
+     * Enables a debug mode by namespaces. This can include modes
+     * separated by a colon and wildcards.
      *
-     * @param {Number} ms
-     * @return {String}
+     * @param {String} namespaces
+     * @api public
+     */
+
+
+    function enable(namespaces) {
+      exports.save(namespaces);
+      exports.names = [];
+      exports.skips = [];
+      var i;
+      var split = (typeof namespaces === 'string' ? namespaces : '').split(/[\s,]+/);
+      var len = split.length;
+
+      for (i = 0; i < len; i++) {
+        if (!split[i]) continue; // ignore empty strings
+
+        namespaces = split[i].replace(/\*/g, '.*?');
+
+        if (namespaces[0] === '-') {
+          exports.skips.push(new RegExp('^' + namespaces.substr(1) + '$'));
+        } else {
+          exports.names.push(new RegExp('^' + namespaces + '$'));
+        }
+      }
+
+      for (i = 0; i < exports.instances.length; i++) {
+        var instance = exports.instances[i];
+        instance.enabled = exports.enabled(instance.namespace);
+      }
+    }
+    /**
+     * Disable debug output.
+     *
+     * @api public
+     */
+
+
+    function disable() {
+      exports.enable('');
+    }
+    /**
+     * Returns true if the given mode name is enabled, false otherwise.
+     *
+     * @param {String} name
+     * @return {Boolean}
+     * @api public
+     */
+
+
+    function enabled(name) {
+      if (name[name.length - 1] === '*') {
+        return true;
+      }
+
+      var i, len;
+
+      for (i = 0, len = exports.skips.length; i < len; i++) {
+        if (exports.skips[i].test(name)) {
+          return false;
+        }
+      }
+
+      for (i = 0, len = exports.names.length; i < len; i++) {
+        if (exports.names[i].test(name)) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+    /**
+     * Coerce `val`.
+     *
+     * @param {Mixed} val
+     * @return {Mixed}
      * @api private
      */
 
 
-    function fmtShort$1(ms) {
-      var msAbs = Math.abs(ms);
-
-      if (msAbs >= d$1) {
-        return Math.round(ms / d$1) + 'd';
-      }
-
-      if (msAbs >= h$1) {
-        return Math.round(ms / h$1) + 'h';
-      }
-
-      if (msAbs >= m$1) {
-        return Math.round(ms / m$1) + 'm';
-      }
-
-      if (msAbs >= s$1) {
-        return Math.round(ms / s$1) + 's';
-      }
-
-      return ms + 'ms';
+    function coerce(val) {
+      if (val instanceof Error) return val.stack || val.message;
+      return val;
     }
-    /**
-     * Long format for `ms`.
-     *
-     * @param {Number} ms
-     * @return {String}
-     * @api private
-     */
-
-
-    function fmtLong$1(ms) {
-      var msAbs = Math.abs(ms);
-
-      if (msAbs >= d$1) {
-        return plural$1(ms, msAbs, d$1, 'day');
-      }
-
-      if (msAbs >= h$1) {
-        return plural$1(ms, msAbs, h$1, 'hour');
-      }
-
-      if (msAbs >= m$1) {
-        return plural$1(ms, msAbs, m$1, 'minute');
-      }
-
-      if (msAbs >= s$1) {
-        return plural$1(ms, msAbs, s$1, 'second');
-      }
-
-      return ms + ' ms';
-    }
-    /**
-     * Pluralization helper.
-     */
-
-
-    function plural$1(ms, msAbs, n, name) {
-      var isPlural = msAbs >= n * 1.5;
-      return Math.round(ms / n) + ' ' + name + (isPlural ? 's' : '');
-    }
-
-    /**
-     * This is the common logic for both the Node.js and web browser
-     * implementations of `debug()`.
-     */
-    function setup(env) {
-      createDebug.debug = createDebug;
-      createDebug.default = createDebug;
-      createDebug.coerce = coerce;
-      createDebug.disable = disable;
-      createDebug.enable = enable;
-      createDebug.enabled = enabled;
-      createDebug.humanize = ms$1;
-      Object.keys(env).forEach(key => {
-        createDebug[key] = env[key];
-      });
-      /**
-      * Active `debug` instances.
-      */
-
-      createDebug.instances = [];
-      /**
-      * The currently active debug mode names, and names to skip.
-      */
-
-      createDebug.names = [];
-      createDebug.skips = [];
-      /**
-      * Map of special "%n" handling functions, for the debug "format" argument.
-      *
-      * Valid key names are a single, lower or upper-case letter, i.e. "n" and "N".
-      */
-
-      createDebug.formatters = {};
-      /**
-      * Selects a color for a debug namespace
-      * @param {String} namespace The namespace string for the for the debug instance to be colored
-      * @return {Number|String} An ANSI color code for the given namespace
-      * @api private
-      */
-
-      function selectColor(namespace) {
-        let hash = 0;
-
-        for (let i = 0; i < namespace.length; i++) {
-          hash = (hash << 5) - hash + namespace.charCodeAt(i);
-          hash |= 0; // Convert to 32bit integer
-        }
-
-        return createDebug.colors[Math.abs(hash) % createDebug.colors.length];
-      }
-
-      createDebug.selectColor = selectColor;
-      /**
-      * Create a debugger with the given `namespace`.
-      *
-      * @param {String} namespace
-      * @return {Function}
-      * @api public
-      */
-
-      function createDebug(namespace) {
-        let prevTime;
-
-        function debug(...args) {
-          // Disabled?
-          if (!debug.enabled) {
-            return;
-          }
-
-          const self = debug; // Set `diff` timestamp
-
-          const curr = Number(new Date());
-          const ms = curr - (prevTime || curr);
-          self.diff = ms;
-          self.prev = prevTime;
-          self.curr = curr;
-          prevTime = curr;
-          args[0] = createDebug.coerce(args[0]);
-
-          if (typeof args[0] !== 'string') {
-            // Anything else let's inspect with %O
-            args.unshift('%O');
-          } // Apply any `formatters` transformations
-
-
-          let index = 0;
-          args[0] = args[0].replace(/%([a-zA-Z%])/g, (match, format) => {
-            // If we encounter an escaped % then don't increase the array index
-            if (match === '%%') {
-              return match;
-            }
-
-            index++;
-            const formatter = createDebug.formatters[format];
-
-            if (typeof formatter === 'function') {
-              const val = args[index];
-              match = formatter.call(self, val); // Now we need to remove `args[index]` since it's inlined in the `format`
-
-              args.splice(index, 1);
-              index--;
-            }
-
-            return match;
-          }); // Apply env-specific formatting (colors, etc.)
-
-          createDebug.formatArgs.call(self, args);
-          const logFn = self.log || createDebug.log;
-          logFn.apply(self, args);
-        }
-
-        debug.namespace = namespace;
-        debug.enabled = createDebug.enabled(namespace);
-        debug.useColors = createDebug.useColors();
-        debug.color = selectColor(namespace);
-        debug.destroy = destroy;
-        debug.extend = extend; // Debug.formatArgs = formatArgs;
-        // debug.rawLog = rawLog;
-        // env-specific initialization logic for debug instances
-
-        if (typeof createDebug.init === 'function') {
-          createDebug.init(debug);
-        }
-
-        createDebug.instances.push(debug);
-        return debug;
-      }
-
-      function destroy() {
-        const index = createDebug.instances.indexOf(this);
-
-        if (index !== -1) {
-          createDebug.instances.splice(index, 1);
-          return true;
-        }
-
-        return false;
-      }
-
-      function extend(namespace, delimiter) {
-        const newDebug = createDebug(this.namespace + (typeof delimiter === 'undefined' ? ':' : delimiter) + namespace);
-        newDebug.log = this.log;
-        return newDebug;
-      }
-      /**
-      * Enables a debug mode by namespaces. This can include modes
-      * separated by a colon and wildcards.
-      *
-      * @param {String} namespaces
-      * @api public
-      */
-
-
-      function enable(namespaces) {
-        createDebug.save(namespaces);
-        createDebug.names = [];
-        createDebug.skips = [];
-        let i;
-        const split = (typeof namespaces === 'string' ? namespaces : '').split(/[\s,]+/);
-        const len = split.length;
-
-        for (i = 0; i < len; i++) {
-          if (!split[i]) {
-            // ignore empty strings
-            continue;
-          }
-
-          namespaces = split[i].replace(/\*/g, '.*?');
-
-          if (namespaces[0] === '-') {
-            createDebug.skips.push(new RegExp('^' + namespaces.substr(1) + '$'));
-          } else {
-            createDebug.names.push(new RegExp('^' + namespaces + '$'));
-          }
-        }
-
-        for (i = 0; i < createDebug.instances.length; i++) {
-          const instance = createDebug.instances[i];
-          instance.enabled = createDebug.enabled(instance.namespace);
-        }
-      }
-      /**
-      * Disable debug output.
-      *
-      * @return {String} namespaces
-      * @api public
-      */
-
-
-      function disable() {
-        const namespaces = [...createDebug.names.map(toNamespace), ...createDebug.skips.map(toNamespace).map(namespace => '-' + namespace)].join(',');
-        createDebug.enable('');
-        return namespaces;
-      }
-      /**
-      * Returns true if the given mode name is enabled, false otherwise.
-      *
-      * @param {String} name
-      * @return {Boolean}
-      * @api public
-      */
-
-
-      function enabled(name) {
-        if (name[name.length - 1] === '*') {
-          return true;
-        }
-
-        let i;
-        let len;
-
-        for (i = 0, len = createDebug.skips.length; i < len; i++) {
-          if (createDebug.skips[i].test(name)) {
-            return false;
-          }
-        }
-
-        for (i = 0, len = createDebug.names.length; i < len; i++) {
-          if (createDebug.names[i].test(name)) {
-            return true;
-          }
-        }
-
-        return false;
-      }
-      /**
-      * Convert regexp to namespace
-      *
-      * @param {RegExp} regxep
-      * @return {String} namespace
-      * @api private
-      */
-
-
-      function toNamespace(regexp) {
-        return regexp.toString().substring(2, regexp.toString().length - 2).replace(/\.\*\?$/, '*');
-      }
-      /**
-      * Coerce `val`.
-      *
-      * @param {Mixed} val
-      * @return {Mixed}
-      * @api private
-      */
-
-
-      function coerce(val) {
-        if (val instanceof Error) {
-          return val.stack || val.message;
-        }
-
-        return val;
-      }
-
-      createDebug.enable(createDebug.load());
-      return createDebug;
-    }
-
-    var common = setup;
+    });
+    var debug_1$2 = debug$3.coerce;
+    var debug_2$2 = debug$3.disable;
+    var debug_3$2 = debug$3.enable;
+    var debug_4$2 = debug$3.enabled;
+    var debug_5$2 = debug$3.humanize;
+    var debug_6$2 = debug$3.instances;
+    var debug_7$2 = debug$3.names;
+    var debug_8$2 = debug$3.skips;
+    var debug_9$2 = debug$3.formatters;
 
     var browser$3 = createCommonjsModule(function (module, exports) {
-    /* eslint-env browser */
-
     /**
      * This is the web browser implementation of `debug()`.
+     *
+     * Expose `debug()` as the module.
      */
+    exports = module.exports = debug$3;
     exports.log = log;
     exports.formatArgs = formatArgs;
     exports.save = save;
     exports.load = load;
     exports.useColors = useColors;
-    exports.storage = localstorage();
+    exports.storage = 'undefined' != typeof chrome && 'undefined' != typeof chrome.storage ? chrome.storage.local : localstorage();
     /**
      * Colors.
      */
@@ -5056,29 +4680,40 @@ var app = (function () {
      *
      * TODO: add a `localStorage` variable to explicitly enable/disable colors
      */
-    // eslint-disable-next-line complexity
 
     function useColors() {
       // NB: In an Electron preload script, document will be defined but not fully
       // initialized. Since we know we're in Chrome, we'll just detect this case
       // explicitly
-      if (typeof window !== 'undefined' && window.process && (window.process.type === 'renderer' || window.process.__nwjs)) {
+      if (typeof window !== 'undefined' && window.process && window.process.type === 'renderer') {
         return true;
       } // Internet Explorer and Edge do not support colors.
 
 
       if (typeof navigator !== 'undefined' && navigator.userAgent && navigator.userAgent.toLowerCase().match(/(edge|trident)\/(\d+)/)) {
         return false;
-      } // Is webkit? http://stackoverflow.com/a/16459606/376773
+      } // is webkit? http://stackoverflow.com/a/16459606/376773
       // document is undefined in react-native: https://github.com/facebook/react-native/pull/1632
 
 
-      return typeof document !== 'undefined' && document.documentElement && document.documentElement.style && document.documentElement.style.WebkitAppearance || // Is firebug? http://stackoverflow.com/a/398120/376773
-      typeof window !== 'undefined' && window.console && (window.console.firebug || window.console.exception && window.console.table) || // Is firefox >= v31?
+      return typeof document !== 'undefined' && document.documentElement && document.documentElement.style && document.documentElement.style.WebkitAppearance || // is firebug? http://stackoverflow.com/a/398120/376773
+      typeof window !== 'undefined' && window.console && (window.console.firebug || window.console.exception && window.console.table) || // is firefox >= v31?
       // https://developer.mozilla.org/en-US/docs/Tools/Web_Console#Styling_messages
-      typeof navigator !== 'undefined' && navigator.userAgent && navigator.userAgent.toLowerCase().match(/firefox\/(\d+)/) && parseInt(RegExp.$1, 10) >= 31 || // Double check webkit in userAgent just in case we are in a worker
+      typeof navigator !== 'undefined' && navigator.userAgent && navigator.userAgent.toLowerCase().match(/firefox\/(\d+)/) && parseInt(RegExp.$1, 10) >= 31 || // double check webkit in userAgent just in case we are in a worker
       typeof navigator !== 'undefined' && navigator.userAgent && navigator.userAgent.toLowerCase().match(/applewebkit\/(\d+)/);
     }
+    /**
+     * Map %j to `JSON.stringify()`, since no Web Inspectors do that by default.
+     */
+
+
+    exports.formatters.j = function (v) {
+      try {
+        return JSON.stringify(v);
+      } catch (err) {
+        return '[UnexpectedJSONParseError]: ' + err.message;
+      }
+    };
     /**
      * Colorize log arguments if enabled.
      *
@@ -5087,28 +4722,22 @@ var app = (function () {
 
 
     function formatArgs(args) {
-      args[0] = (this.useColors ? '%c' : '') + this.namespace + (this.useColors ? ' %c' : ' ') + args[0] + (this.useColors ? '%c ' : ' ') + '+' + module.exports.humanize(this.diff);
-
-      if (!this.useColors) {
-        return;
-      }
-
-      const c = 'color: ' + this.color;
-      args.splice(1, 0, c, 'color: inherit'); // The final "%c" is somewhat tricky, because there could be other
+      var useColors = this.useColors;
+      args[0] = (useColors ? '%c' : '') + this.namespace + (useColors ? ' %c' : ' ') + args[0] + (useColors ? '%c ' : ' ') + '+' + exports.humanize(this.diff);
+      if (!useColors) return;
+      var c = 'color: ' + this.color;
+      args.splice(1, 0, c, 'color: inherit'); // the final "%c" is somewhat tricky, because there could be other
       // arguments passed either before or after the %c, so we need to
       // figure out the correct index to insert the CSS into
 
-      let index = 0;
-      let lastC = 0;
-      args[0].replace(/%[a-zA-Z%]/g, match => {
-        if (match === '%%') {
-          return;
-        }
-
+      var index = 0;
+      var lastC = 0;
+      args[0].replace(/%[a-zA-Z%]/g, function (match) {
+        if ('%%' === match) return;
         index++;
 
-        if (match === '%c') {
-          // We only are interested in the *last* %c
+        if ('%c' === match) {
+          // we only are interested in the *last* %c
           // (the user may have provided their own)
           lastC = index;
         }
@@ -5123,10 +4752,10 @@ var app = (function () {
      */
 
 
-    function log(...args) {
-      // This hackery is required for IE8/9, where
+    function log() {
+      // this hackery is required for IE8/9, where
       // the `console.log` function doesn't have 'apply'
-      return typeof console === 'object' && console.log && console.log(...args);
+      return 'object' === typeof console && console.log && Function.prototype.apply.call(console.log, console, arguments);
     }
     /**
      * Save `namespaces`.
@@ -5138,14 +4767,12 @@ var app = (function () {
 
     function save(namespaces) {
       try {
-        if (namespaces) {
-          exports.storage.setItem('debug', namespaces);
-        } else {
+        if (null == namespaces) {
           exports.storage.removeItem('debug');
+        } else {
+          exports.storage.debug = namespaces;
         }
-      } catch (error) {// Swallow
-        // XXX (@Qix-) should we be logging these?
-      }
+      } catch (e) {}
     }
     /**
      * Load `namespaces`.
@@ -5156,13 +4783,11 @@ var app = (function () {
 
 
     function load() {
-      let r;
+      var r;
 
       try {
-        r = exports.storage.getItem('debug');
-      } catch (error) {// Swallow
-        // XXX (@Qix-) should we be logging these?
-      } // If debug isn't set in LS, and we're in Electron, try to load $DEBUG
+        r = exports.storage.debug;
+      } catch (e) {} // If debug isn't set in LS, and we're in Electron, try to load $DEBUG
 
 
       if (!r && typeof process !== 'undefined' && 'env' in process) {
@@ -5171,6 +4796,12 @@ var app = (function () {
 
       return r;
     }
+    /**
+     * Enable namespaces listed in `localStorage.debug` initially.
+     */
+
+
+    exports.enable(load());
     /**
      * Localstorage attempts to return the localstorage.
      *
@@ -5182,32 +4813,11 @@ var app = (function () {
      * @api private
      */
 
-
     function localstorage() {
       try {
-        // TVMLKit (Apple TV JS Runtime) does not have a window object, just localStorage in the global context
-        // The Browser also has localStorage in the global context.
-        return localStorage;
-      } catch (error) {// Swallow
-        // XXX (@Qix-) should we be logging these?
-      }
+        return window.localStorage;
+      } catch (e) {}
     }
-
-    module.exports = common(exports);
-    const {
-      formatters
-    } = module.exports;
-    /**
-     * Map %j to `JSON.stringify()`, since no Web Inspectors do that by default.
-     */
-
-    formatters.j = function (v) {
-      try {
-        return JSON.stringify(v);
-      } catch (error) {
-        return '[UnexpectedJSONParseError]: ' + error.message;
-      }
-    };
     });
     var browser_1$3 = browser$3.log;
     var browser_2$3 = browser$3.formatArgs;
@@ -5230,7 +4840,7 @@ var app = (function () {
 
 
 
-    var debug$3 = browser$3('engine.io-client:polling');
+    var debug$4 = browser$3('engine.io-client:polling');
     /**
      * Module exports.
      */
@@ -5300,7 +4910,7 @@ var app = (function () {
       this.readyState = 'pausing';
 
       function pause() {
-        debug$3('paused');
+        debug$4('paused');
         self.readyState = 'paused';
         onPause();
       }
@@ -5309,19 +4919,19 @@ var app = (function () {
         var total = 0;
 
         if (this.polling) {
-          debug$3('we are currently polling - waiting to pause');
+          debug$4('we are currently polling - waiting to pause');
           total++;
           this.once('pollComplete', function () {
-            debug$3('pre-pause polling complete');
+            debug$4('pre-pause polling complete');
             --total || pause();
           });
         }
 
         if (!this.writable) {
-          debug$3('we are currently writing - waiting to pause');
+          debug$4('we are currently writing - waiting to pause');
           total++;
           this.once('drain', function () {
-            debug$3('pre-pause writing complete');
+            debug$4('pre-pause writing complete');
             --total || pause();
           });
         }
@@ -5337,7 +4947,7 @@ var app = (function () {
 
 
     Polling.prototype.poll = function () {
-      debug$3('polling');
+      debug$4('polling');
       this.polling = true;
       this.doPoll();
       this.emit('poll');
@@ -5351,7 +4961,7 @@ var app = (function () {
 
     Polling.prototype.onData = function (data) {
       var self = this;
-      debug$3('polling got data %s', data);
+      debug$4('polling got data %s', data);
 
       var callback = function (packet, index, total) {
         // if its the first message we consider the transport open
@@ -5380,7 +4990,7 @@ var app = (function () {
         if ('open' === this.readyState) {
           this.poll();
         } else {
-          debug$3('ignoring poll - transport state "%s"', this.readyState);
+          debug$4('ignoring poll - transport state "%s"', this.readyState);
         }
       }
     };
@@ -5395,19 +5005,19 @@ var app = (function () {
       var self = this;
 
       function close() {
-        debug$3('writing close packet');
+        debug$4('writing close packet');
         self.write([{
           type: 'close'
         }]);
       }
 
       if ('open' === this.readyState) {
-        debug$3('transport open - closing');
+        debug$4('transport open - closing');
         close();
       } else {
         // in case we're trying to close while
         // handshaking is in progress (GH-164)
-        debug$3('transport not open - deferring close');
+        debug$4('transport not open - deferring close');
         this.once('open', close);
       }
     };
@@ -5481,7 +5091,7 @@ var app = (function () {
 
 
 
-    var debug$4 = browser$3('engine.io-client:polling-xhr');
+    var debug$5 = browser$3('engine.io-client:polling-xhr');
 
 
     /**
@@ -5592,7 +5202,7 @@ var app = (function () {
 
 
     XHR.prototype.doPoll = function () {
-      debug$4('xhr poll');
+      debug$5('xhr poll');
       var req = this.request();
       var self = this;
       req.on('data', function (data) {
@@ -5641,7 +5251,7 @@ var app = (function () {
      */
 
 
-    componentEmitter$1(Request.prototype);
+    componentEmitter(Request.prototype);
     /**
      * Creates the XHR object and sends the request.
      *
@@ -5667,7 +5277,7 @@ var app = (function () {
       var self = this;
 
       try {
-        debug$4('xhr open %s: %s', this.method, this.uri);
+        debug$5('xhr open %s: %s', this.method, this.uri);
         xhr.open(this.method, this.uri, this.async);
 
         try {
@@ -5739,7 +5349,7 @@ var app = (function () {
           };
         }
 
-        debug$4('xhr data %s', this.data);
+        debug$5('xhr data %s', this.data);
         xhr.send(this.data);
       } catch (e) {
         // Need to defer since .create() is called directly fhrom the constructor
@@ -6140,7 +5750,7 @@ var app = (function () {
 
 
 
-    var debug$5 = browser$3('engine.io-client:websocket');
+    var debug$6 = browser$3('engine.io-client:websocket');
 
     var BrowserWebSocket, NodeWebSocket;
 
@@ -6338,7 +5948,7 @@ var app = (function () {
                 self.ws.send(data, opts);
               }
             } catch (e) {
-              debug$5('websocket closed before onclose event');
+              debug$6('websocket closed before onclose event');
             }
 
             --total || done();
@@ -6497,49 +6107,13 @@ var app = (function () {
     };
 
     /**
-     * Parses an URI
-     *
-     * @author Steven Levithan <stevenlevithan.com> (MIT license)
-     * @api private
-     */
-    var re$1 = /^(?:(?![^:@]+:[^:@\/]*@)(http|https|ws|wss):\/\/)?((?:(([^:@]*)(?::([^:@]*))?)?@)?((?:[a-f0-9]{0,4}:){2,7}[a-f0-9]{0,4}|[^:\/?#]*)(?::(\d*))?)(((\/(?:[^?#](?![^?#\/]*\.[^?#\/.]+(?:[?#]|$)))*\/?)?([^?#\/]*))(?:\?([^#]*))?(?:#(.*))?)/;
-    var parts$1 = ['source', 'protocol', 'authority', 'userInfo', 'user', 'password', 'host', 'port', 'relative', 'path', 'directory', 'file', 'query', 'anchor'];
-
-    var parseuri$1 = function parseuri(str) {
-      var src = str,
-          b = str.indexOf('['),
-          e = str.indexOf(']');
-
-      if (b != -1 && e != -1) {
-        str = str.substring(0, b) + str.substring(b, e).replace(/:/g, ';') + str.substring(e, str.length);
-      }
-
-      var m = re$1.exec(str || ''),
-          uri = {},
-          i = 14;
-
-      while (i--) {
-        uri[parts$1[i]] = m[i] || '';
-      }
-
-      if (b != -1 && e != -1) {
-        uri.source = src;
-        uri.host = uri.host.substring(1, uri.host.length - 1).replace(/;/g, ':');
-        uri.authority = uri.authority.replace('[', '').replace(']', '').replace(/;/g, ':');
-        uri.ipv6uri = true;
-      }
-
-      return uri;
-    };
-
-    /**
      * Module dependencies.
      */
 
 
 
 
-    var debug$6 = browser$3('engine.io-client:socket');
+    var debug$7 = browser$3('engine.io-client:socket');
 
 
 
@@ -6572,13 +6146,13 @@ var app = (function () {
       }
 
       if (uri) {
-        uri = parseuri$1(uri);
+        uri = parseuri(uri);
         opts.hostname = uri.host;
         opts.secure = uri.protocol === 'https' || uri.protocol === 'wss';
         opts.port = uri.port;
         if (uri.query) opts.query = uri.query;
       } else if (opts.host) {
-        opts.hostname = parseuri$1(opts.host).host;
+        opts.hostname = parseuri(opts.host).host;
       }
 
       this.secure = null != opts.secure ? opts.secure : typeof location !== 'undefined' && 'https:' === location.protocol;
@@ -6656,7 +6230,7 @@ var app = (function () {
      * Mix in `Emitter`.
      */
 
-    componentEmitter$1(Socket.prototype);
+    componentEmitter(Socket.prototype);
     /**
      * Protocol version.
      *
@@ -6683,7 +6257,7 @@ var app = (function () {
      */
 
     Socket.prototype.createTransport = function (name) {
-      debug$6('creating transport "%s"', name);
+      debug$7('creating transport "%s"', name);
       var query = clone(this.query); // append engine.io protocol identifier
 
       query.EIO = browser$2.protocol; // transport name
@@ -6782,11 +6356,11 @@ var app = (function () {
 
 
     Socket.prototype.setTransport = function (transport) {
-      debug$6('setting transport %s', transport.name);
+      debug$7('setting transport %s', transport.name);
       var self = this;
 
       if (this.transport) {
-        debug$6('clearing existing transport %s', this.transport.name);
+        debug$7('clearing existing transport %s', this.transport.name);
         this.transport.removeAllListeners();
       } // set up transport
 
@@ -6812,7 +6386,7 @@ var app = (function () {
 
 
     Socket.prototype.probe = function (name) {
-      debug$6('probing transport "%s"', name);
+      debug$7('probing transport "%s"', name);
       var transport = this.createTransport(name, {
         probe: 1
       });
@@ -6827,7 +6401,7 @@ var app = (function () {
         }
 
         if (failed) return;
-        debug$6('probe transport "%s" opened', name);
+        debug$7('probe transport "%s" opened', name);
         transport.send([{
           type: 'ping',
           data: 'probe'
@@ -6836,16 +6410,16 @@ var app = (function () {
           if (failed) return;
 
           if ('pong' === msg.type && 'probe' === msg.data) {
-            debug$6('probe transport "%s" pong', name);
+            debug$7('probe transport "%s" pong', name);
             self.upgrading = true;
             self.emit('upgrading', transport);
             if (!transport) return;
             Socket.priorWebsocketSuccess = 'websocket' === transport.name;
-            debug$6('pausing current transport "%s"', self.transport.name);
+            debug$7('pausing current transport "%s"', self.transport.name);
             self.transport.pause(function () {
               if (failed) return;
               if ('closed' === self.readyState) return;
-              debug$6('changing transport and sending upgrade packet');
+              debug$7('changing transport and sending upgrade packet');
               cleanup();
               self.setTransport(transport);
               transport.send([{
@@ -6857,7 +6431,7 @@ var app = (function () {
               self.flush();
             });
           } else {
-            debug$6('probe transport "%s" failed', name);
+            debug$7('probe transport "%s" failed', name);
             var err = new Error('probe error');
             err.transport = transport.name;
             self.emit('upgradeError', err);
@@ -6879,7 +6453,7 @@ var app = (function () {
         var error = new Error('probe error: ' + err);
         error.transport = transport.name;
         freezeTransport();
-        debug$6('probe transport "%s" failed because of error: %s', name, err);
+        debug$7('probe transport "%s" failed because of error: %s', name, err);
         self.emit('upgradeError', error);
       }
 
@@ -6895,7 +6469,7 @@ var app = (function () {
 
       function onupgrade(to) {
         if (transport && to.name !== transport.name) {
-          debug$6('"%s" works - aborting "%s"', to.name, transport.name);
+          debug$7('"%s" works - aborting "%s"', to.name, transport.name);
           freezeTransport();
         }
       } // Remove all listeners on the transport and on self
@@ -6924,7 +6498,7 @@ var app = (function () {
 
 
     Socket.prototype.onOpen = function () {
-      debug$6('socket open');
+      debug$7('socket open');
       this.readyState = 'open';
       Socket.priorWebsocketSuccess = 'websocket' === this.transport.name;
       this.emit('open');
@@ -6932,7 +6506,7 @@ var app = (function () {
       // listener already closed the socket
 
       if ('open' === this.readyState && this.upgrade && this.transport.pause) {
-        debug$6('starting upgrade probes');
+        debug$7('starting upgrade probes');
 
         for (var i = 0, l = this.upgrades.length; i < l; i++) {
           this.probe(this.upgrades[i]);
@@ -6948,7 +6522,7 @@ var app = (function () {
 
     Socket.prototype.onPacket = function (packet) {
       if ('opening' === this.readyState || 'open' === this.readyState || 'closing' === this.readyState) {
-        debug$6('socket receive: type "%s", data "%s"', packet.type, packet.data);
+        debug$7('socket receive: type "%s", data "%s"', packet.type, packet.data);
         this.emit('packet', packet); // Socket is live - any packet counts
 
         this.emit('heartbeat');
@@ -6975,7 +6549,7 @@ var app = (function () {
             break;
         }
       } else {
-        debug$6('packet received with socket readyState "%s"', this.readyState);
+        debug$7('packet received with socket readyState "%s"', this.readyState);
       }
     };
     /**
@@ -7028,7 +6602,7 @@ var app = (function () {
       var self = this;
       clearTimeout(self.pingIntervalTimer);
       self.pingIntervalTimer = setTimeout(function () {
-        debug$6('writing ping packet - expecting pong within %sms', self.pingTimeout);
+        debug$7('writing ping packet - expecting pong within %sms', self.pingTimeout);
         self.ping();
         self.onHeartbeat(self.pingTimeout);
       }, self.pingInterval);
@@ -7075,7 +6649,7 @@ var app = (function () {
 
     Socket.prototype.flush = function () {
       if ('closed' !== this.readyState && this.transport.writable && !this.upgrading && this.writeBuffer.length) {
-        debug$6('flushing %d packets in socket', this.writeBuffer.length);
+        debug$7('flushing %d packets in socket', this.writeBuffer.length);
         this.transport.send(this.writeBuffer); // keep track of current length of writeBuffer
         // splice writeBuffer and callbackBuffer on `drain`
 
@@ -7165,7 +6739,7 @@ var app = (function () {
 
       function close() {
         self.onClose('forced close');
-        debug$6('socket closing - telling transport to close');
+        debug$7('socket closing - telling transport to close');
         self.transport.close();
       }
 
@@ -7191,7 +6765,7 @@ var app = (function () {
 
 
     Socket.prototype.onError = function (err) {
-      debug$6('socket error %j', err);
+      debug$7('socket error %j', err);
       Socket.priorWebsocketSuccess = false;
       this.emit('error', err);
       this.onClose('transport error', err);
@@ -7205,7 +6779,7 @@ var app = (function () {
 
     Socket.prototype.onClose = function (reason, desc) {
       if ('opening' === this.readyState || 'open' === this.readyState || 'closing' === this.readyState) {
-        debug$6('socket close with reason: "%s"', reason);
+        debug$7('socket close with reason: "%s"', reason);
         var self = this; // clear timers
 
         clearTimeout(this.pingIntervalTimer);
@@ -7315,50 +6889,6 @@ var app = (function () {
       };
     };
 
-    /**
-     * Compiles a querystring
-     * Returns string representation of the object
-     *
-     * @param {Object}
-     * @api private
-     */
-    var encode$2 = function (obj) {
-      var str = '';
-
-      for (var i in obj) {
-        if (obj.hasOwnProperty(i)) {
-          if (str.length) str += '&';
-          str += encodeURIComponent(i) + '=' + encodeURIComponent(obj[i]);
-        }
-      }
-
-      return str;
-    };
-    /**
-     * Parses a simple querystring into an object
-     *
-     * @param {String} qs
-     * @api private
-     */
-
-
-    var decode$2 = function (qs) {
-      var qry = {};
-      var pairs = qs.split('&');
-
-      for (var i = 0, l = pairs.length; i < l; i++) {
-        var pair = pairs[i].split('=');
-        qry[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1]);
-      }
-
-      return qry;
-    };
-
-    var parseqs$1 = {
-    	encode: encode$2,
-    	decode: decode$2
-    };
-
     var socket$1 = createCommonjsModule(function (module, exports) {
     /**
      * Module dependencies.
@@ -7410,7 +6940,7 @@ var app = (function () {
      * Shortcut to `Emitter#emit`.
      */
 
-    var emit = componentEmitter$1.prototype.emit;
+    var emit = componentEmitter.prototype.emit;
     /**
      * `Socket` constructor.
      *
@@ -7441,7 +6971,7 @@ var app = (function () {
      */
 
 
-    componentEmitter$1(Socket.prototype);
+    componentEmitter(Socket.prototype);
     /**
      * Subscribe to open, close and packet events
      *
@@ -7546,7 +7076,7 @@ var app = (function () {
 
       if ('/' !== this.nsp) {
         if (this.query) {
-          var query = typeof this.query === 'object' ? parseqs$1.encode(this.query) : this.query;
+          var query = typeof this.query === 'object' ? parseqs.encode(this.query) : this.query;
           debug('sending connect packet with query %s', query);
           this.packet({
             type: socket_ioParser.CONNECT,
@@ -7903,7 +7433,7 @@ var app = (function () {
 
 
 
-    var debug$7 = browser('socket.io-client:manager');
+    var debug$8 = browser('socket.io-client:manager');
 
 
 
@@ -8012,7 +7542,7 @@ var app = (function () {
      */
 
 
-    componentEmitter$1(Manager.prototype);
+    componentEmitter(Manager.prototype);
     /**
      * Sets the `reconnection` config.
      *
@@ -8115,9 +7645,9 @@ var app = (function () {
 
 
     Manager.prototype.open = Manager.prototype.connect = function (fn, opts) {
-      debug$7('readyState %s', this.readyState);
+      debug$8('readyState %s', this.readyState);
       if (~this.readyState.indexOf('open')) return this;
-      debug$7('opening %s', this.uri);
+      debug$8('opening %s', this.uri);
       this.engine = lib(this.uri, this.opts);
       var socket = this.engine;
       var self = this;
@@ -8130,7 +7660,7 @@ var app = (function () {
       }); // emit `connect_error`
 
       var errorSub = on_1(socket, 'error', function (data) {
-        debug$7('connect_error');
+        debug$8('connect_error');
         self.cleanup();
         self.readyState = 'closed';
         self.emitAll('connect_error', data);
@@ -8147,7 +7677,7 @@ var app = (function () {
 
       if (false !== this._timeout) {
         var timeout = this._timeout;
-        debug$7('connect attempt will timeout after %d', timeout);
+        debug$8('connect attempt will timeout after %d', timeout);
 
         if (timeout === 0) {
           openSub.destroy(); // prevents a race condition with the 'open' event
@@ -8155,7 +7685,7 @@ var app = (function () {
 
 
         var timer = setTimeout(function () {
-          debug$7('connect attempt timed out after %d', timeout);
+          debug$8('connect attempt timed out after %d', timeout);
           openSub.destroy();
           socket.close();
           socket.emit('error', 'timeout');
@@ -8180,7 +7710,7 @@ var app = (function () {
 
 
     Manager.prototype.onopen = function () {
-      debug$7('open'); // clear old subs
+      debug$8('open'); // clear old subs
 
       this.cleanup(); // mark as open
 
@@ -8244,7 +7774,7 @@ var app = (function () {
 
 
     Manager.prototype.onerror = function (err) {
-      debug$7('error', err);
+      debug$8('error', err);
       this.emitAll('error', err);
     };
     /**
@@ -8303,7 +7833,7 @@ var app = (function () {
 
 
     Manager.prototype.packet = function (packet) {
-      debug$7('writing packet %j', packet);
+      debug$8('writing packet %j', packet);
       var self = this;
       if (packet.query && packet.type === 0) packet.nsp += '?' + packet.query;
 
@@ -8345,7 +7875,7 @@ var app = (function () {
 
 
     Manager.prototype.cleanup = function () {
-      debug$7('cleanup');
+      debug$8('cleanup');
       var subsLength = this.subs.length;
 
       for (var i = 0; i < subsLength; i++) {
@@ -8366,7 +7896,7 @@ var app = (function () {
 
 
     Manager.prototype.close = Manager.prototype.disconnect = function () {
-      debug$7('disconnect');
+      debug$8('disconnect');
       this.skipReconnect = true;
       this.reconnecting = false;
 
@@ -8388,7 +7918,7 @@ var app = (function () {
 
 
     Manager.prototype.onclose = function (reason) {
-      debug$7('onclose');
+      debug$8('onclose');
       this.cleanup();
       this.backoff.reset();
       this.readyState = 'closed';
@@ -8410,29 +7940,29 @@ var app = (function () {
       var self = this;
 
       if (this.backoff.attempts >= this._reconnectionAttempts) {
-        debug$7('reconnect failed');
+        debug$8('reconnect failed');
         this.backoff.reset();
         this.emitAll('reconnect_failed');
         this.reconnecting = false;
       } else {
         var delay = this.backoff.duration();
-        debug$7('will wait %dms before reconnect attempt', delay);
+        debug$8('will wait %dms before reconnect attempt', delay);
         this.reconnecting = true;
         var timer = setTimeout(function () {
           if (self.skipReconnect) return;
-          debug$7('attempting reconnect');
+          debug$8('attempting reconnect');
           self.emitAll('reconnect_attempt', self.backoff.attempts);
           self.emitAll('reconnecting', self.backoff.attempts); // check again for the case socket closed in above events
 
           if (self.skipReconnect) return;
           self.open(function (err) {
             if (err) {
-              debug$7('reconnect attempt error');
+              debug$8('reconnect attempt error');
               self.reconnecting = false;
               self.reconnect();
               self.emitAll('reconnect_error', err.data);
             } else {
-              debug$7('reconnect success');
+              debug$8('reconnect success');
               self.onreconnect();
             }
           });
@@ -9470,7 +9000,7 @@ var app = (function () {
       stripBOM: stripBOM
     };
 
-    function encode$3(val) {
+    function encode$2(val) {
       return encodeURIComponent(val).replace(/%3A/gi, ':').replace(/%24/g, '$').replace(/%2C/gi, ',').replace(/%20/g, '+').replace(/%5B/gi, '[').replace(/%5D/gi, ']');
     }
     /**
@@ -9514,7 +9044,7 @@ var app = (function () {
               v = JSON.stringify(v);
             }
 
-            parts.push(encode$3(key) + '=' + encode$3(v));
+            parts.push(encode$2(key) + '=' + encode$2(v));
           });
         });
         serializedParams = parts.join('&');
@@ -15690,11 +15220,11 @@ var app = (function () {
 
     function get_each_context(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[27] = list[i];
+    	child_ctx[28] = list[i];
     	return child_ctx;
     }
 
-    // (325:2) {#if _data}
+    // (335:2) {#if _data}
     function create_if_block$3(ctx) {
     	let nav;
     	let t0;
@@ -15722,7 +15252,7 @@ var app = (function () {
     	let if_block0 = /*isLoading*/ ctx[9] && create_if_block_7(ctx);
     	let each_value = /*_chats*/ ctx[3];
     	validate_each_argument(each_value);
-    	const get_key = ctx => /*chat*/ ctx[27].id;
+    	const get_key = ctx => /*chat*/ ctx[28].id;
     	validate_each_keys(ctx, each_value, get_each_context, get_key);
 
     	for (let i = 0; i < each_value.length; i += 1) {
@@ -15767,7 +15297,7 @@ var app = (function () {
     			if (if_block2) if_block2.c();
     			if_block2_anchor = empty();
     			attr_dev(main_1, "class", "svelte-4opjxd");
-    			add_location(main_1, file$6, 347, 4, 10168);
+    			add_location(main_1, file$6, 357, 4, 10327);
     		},
     		m: function mount(target, anchor) {
     			mount_component(nav, target, anchor);
@@ -15798,7 +15328,7 @@ var app = (function () {
     		p: function update(ctx, dirty) {
     			const nav_changes = {};
 
-    			if (dirty & /*$$scope, _user*/ 1073741828) {
+    			if (dirty[0] & /*_user*/ 4 | dirty[1] & /*$$scope*/ 1) {
     				nav_changes.$$scope = { dirty, ctx };
     			}
 
@@ -15806,7 +15336,7 @@ var app = (function () {
 
     			if (/*isLoading*/ ctx[9]) {
     				if (if_block0) {
-    					if (dirty & /*isLoading*/ 512) {
+    					if (dirty[0] & /*isLoading*/ 512) {
     						transition_in(if_block0, 1);
     					}
     				} else {
@@ -15825,7 +15355,7 @@ var app = (function () {
     				check_outros();
     			}
 
-    			if (dirty & /*_chats, $user, toHSL*/ 4104) {
+    			if (dirty[0] & /*_chats, $user*/ 4104) {
     				const each_value = /*_chats*/ ctx[3];
     				validate_each_argument(each_value);
     				validate_each_keys(ctx, each_value, get_each_context, get_key);
@@ -15846,18 +15376,18 @@ var app = (function () {
     			}
 
     			const messageinput_changes = {};
-    			if (dirty & /*textareaClass*/ 16) messageinput_changes.textareaClass = /*textareaClass*/ ctx[4];
-    			if (dirty & /*visitor*/ 1) messageinput_changes.visitor = /*visitor*/ ctx[0];
-    			if (dirty & /*socket*/ 64) messageinput_changes.socket = /*socket*/ ctx[6];
-    			if (dirty & /*init*/ 32) messageinput_changes.init = /*init*/ ctx[5];
-    			if (dirty & /*_chats*/ 8) messageinput_changes._chats = /*_chats*/ ctx[3];
+    			if (dirty[0] & /*textareaClass*/ 16) messageinput_changes.textareaClass = /*textareaClass*/ ctx[4];
+    			if (dirty[0] & /*visitor*/ 1) messageinput_changes.visitor = /*visitor*/ ctx[0];
+    			if (dirty[0] & /*socket*/ 64) messageinput_changes.socket = /*socket*/ ctx[6];
+    			if (dirty[0] & /*init*/ 32) messageinput_changes.init = /*init*/ ctx[5];
+    			if (dirty[0] & /*_chats*/ 8) messageinput_changes._chats = /*_chats*/ ctx[3];
     			messageinput.$set(messageinput_changes);
 
     			if (/*showScrollToBottom*/ ctx[7]) {
     				if (if_block2) {
     					if_block2.p(ctx, dirty);
 
-    					if (dirty & /*showScrollToBottom*/ 128) {
+    					if (dirty[0] & /*showScrollToBottom*/ 128) {
     						transition_in(if_block2, 1);
     					}
     				} else {
@@ -15917,14 +15447,14 @@ var app = (function () {
     		block,
     		id: create_if_block$3.name,
     		type: "if",
-    		source: "(325:2) {#if _data}",
+    		source: "(335:2) {#if _data}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (328:8) {#if _user}
+    // (338:8) {#if _user}
     function create_if_block_9(ctx) {
     	let div0;
     	let t0;
@@ -15946,11 +15476,11 @@ var app = (function () {
     			t2 = space();
     			if (if_block) if_block.c();
     			attr_dev(div0, "class", "assistant-avatar svelte-4opjxd");
-    			add_location(div0, file$6, 328, 10, 9571);
+    			add_location(div0, file$6, 338, 10, 9730);
     			attr_dev(div1, "class", "text-white text-size-15 svelte-4opjxd");
-    			add_location(div1, file$6, 330, 12, 9655);
+    			add_location(div1, file$6, 340, 12, 9814);
     			attr_dev(div2, "class", "assistant-text svelte-4opjxd");
-    			add_location(div2, file$6, 329, 10, 9614);
+    			add_location(div2, file$6, 339, 10, 9773);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div0, anchor);
@@ -15962,8 +15492,8 @@ var app = (function () {
     			if (if_block) if_block.m(div2, null);
     		},
     		p: function update(ctx, dirty) {
-    			if (dirty & /*_user*/ 4 && t1_value !== (t1_value = /*_user*/ ctx[2].name + "")) set_data_dev(t1, t1_value);
-    			if (dirty & /*_user*/ 4) show_if = /*_user*/ ctx[2].title && /*_user*/ ctx[2].title.trim();
+    			if (dirty[0] & /*_user*/ 4 && t1_value !== (t1_value = /*_user*/ ctx[2].name + "")) set_data_dev(t1, t1_value);
+    			if (dirty[0] & /*_user*/ 4) show_if = /*_user*/ ctx[2].title && /*_user*/ ctx[2].title.trim();
 
     			if (show_if) {
     				if (if_block) {
@@ -15990,14 +15520,14 @@ var app = (function () {
     		block,
     		id: create_if_block_9.name,
     		type: "if",
-    		source: "(328:8) {#if _user}",
+    		source: "(338:8) {#if _user}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (332:12) {#if _user.title && _user.title.trim()}
+    // (342:12) {#if _user.title && _user.title.trim()}
     function create_if_block_10(ctx) {
     	let div;
     	let t_value = /*_user*/ ctx[2].title + "";
@@ -16008,14 +15538,14 @@ var app = (function () {
     			div = element("div");
     			t = text(t_value);
     			attr_dev(div, "class", "text-white-50 text-size-13 svelte-4opjxd");
-    			add_location(div, file$6, 332, 14, 9777);
+    			add_location(div, file$6, 342, 14, 9936);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
     			append_dev(div, t);
     		},
     		p: function update(ctx, dirty) {
-    			if (dirty & /*_user*/ 4 && t_value !== (t_value = /*_user*/ ctx[2].title + "")) set_data_dev(t, t_value);
+    			if (dirty[0] & /*_user*/ 4 && t_value !== (t_value = /*_user*/ ctx[2].title + "")) set_data_dev(t, t_value);
     		},
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(div);
@@ -16026,14 +15556,14 @@ var app = (function () {
     		block,
     		id: create_if_block_10.name,
     		type: "if",
-    		source: "(332:12) {#if _user.title && _user.title.trim()}",
+    		source: "(342:12) {#if _user.title && _user.title.trim()}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (337:8) {#if !_user}
+    // (347:8) {#if !_user}
     function create_if_block_8(ctx) {
     	let div2;
     	let div0;
@@ -16049,11 +15579,11 @@ var app = (function () {
     			div1 = element("div");
     			div1.textContent = "客服当前在线";
     			attr_dev(div0, "class", "text-white text-size-15 svelte-4opjxd");
-    			add_location(div0, file$6, 338, 12, 9958);
+    			add_location(div0, file$6, 348, 12, 10117);
     			attr_dev(div1, "class", "text-white-50 text-size-13 svelte-4opjxd");
-    			add_location(div1, file$6, 341, 12, 10055);
+    			add_location(div1, file$6, 351, 12, 10214);
     			attr_dev(div2, "class", "assistant-text svelte-4opjxd");
-    			add_location(div2, file$6, 337, 10, 9917);
+    			add_location(div2, file$6, 347, 10, 10076);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div2, anchor);
@@ -16070,14 +15600,14 @@ var app = (function () {
     		block,
     		id: create_if_block_8.name,
     		type: "if",
-    		source: "(337:8) {#if !_user}",
+    		source: "(347:8) {#if !_user}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (326:4) <Nav>
+    // (336:4) <Nav>
     function create_default_slot_1(ctx) {
     	let div;
     	let t;
@@ -16091,7 +15621,7 @@ var app = (function () {
     			t = space();
     			if (if_block1) if_block1.c();
     			attr_dev(div, "class", "assistant-info svelte-4opjxd");
-    			add_location(div, file$6, 326, 6, 9512);
+    			add_location(div, file$6, 336, 6, 9671);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -16135,14 +15665,14 @@ var app = (function () {
     		block,
     		id: create_default_slot_1.name,
     		type: "slot",
-    		source: "(326:4) <Nav>",
+    		source: "(336:4) <Nav>",
     		ctx
     	});
 
     	return block;
     }
 
-    // (349:6) {#if isLoading}
+    // (359:6) {#if isLoading}
     function create_if_block_7(ctx) {
     	let spinner;
     	let current;
@@ -16174,17 +15704,17 @@ var app = (function () {
     		block,
     		id: create_if_block_7.name,
     		type: "if",
-    		source: "(349:6) {#if isLoading}",
+    		source: "(359:6) {#if isLoading}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (361:14) {#if chat.sender_type_text === 'user'}
+    // (371:14) {#if chat.sender_type_text === 'user'}
     function create_if_block_6(ctx) {
     	let span;
-    	let t_value = /*chat*/ ctx[27].sender.name + "";
+    	let t_value = /*chat*/ ctx[28].sender.name + "";
     	let t;
 
     	const block = {
@@ -16192,14 +15722,14 @@ var app = (function () {
     			span = element("span");
     			t = text(t_value);
     			attr_dev(span, "class", "user svelte-4opjxd");
-    			add_location(span, file$6, 361, 16, 10682);
+    			add_location(span, file$6, 371, 16, 10841);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, span, anchor);
     			append_dev(span, t);
     		},
     		p: function update(ctx, dirty) {
-    			if (dirty & /*_chats*/ 8 && t_value !== (t_value = /*chat*/ ctx[27].sender.name + "")) set_data_dev(t, t_value);
+    			if (dirty[0] & /*_chats*/ 8 && t_value !== (t_value = /*chat*/ ctx[28].sender.name + "")) set_data_dev(t, t_value);
     		},
     		d: function destroy(detaching) {
     			if (detaching) detach_dev(span);
@@ -16210,14 +15740,14 @@ var app = (function () {
     		block,
     		id: create_if_block_6.name,
     		type: "if",
-    		source: "(361:14) {#if chat.sender_type_text === 'user'}",
+    		source: "(371:14) {#if chat.sender_type_text === 'user'}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (366:14) {#if chat.sender_type_text === 'user'}
+    // (376:14) {#if chat.sender_type_text === 'user'}
     function create_if_block_5(ctx) {
     	let div;
     	let img;
@@ -16227,19 +15757,19 @@ var app = (function () {
     		c: function create() {
     			div = element("div");
     			img = element("img");
-    			if (img.src !== (img_src_value = /*chat*/ ctx[27].sender.avatar)) attr_dev(img, "src", img_src_value);
+    			if (img.src !== (img_src_value = /*chat*/ ctx[28].sender.avatar)) attr_dev(img, "src", img_src_value);
     			attr_dev(img, "alt", "");
     			attr_dev(img, "class", "svelte-4opjxd");
-    			add_location(img, file$6, 367, 18, 10892);
+    			add_location(img, file$6, 377, 18, 11051);
     			attr_dev(div, "class", "avatar svelte-4opjxd");
-    			add_location(div, file$6, 366, 16, 10853);
+    			add_location(div, file$6, 376, 16, 11012);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
     			append_dev(div, img);
     		},
     		p: function update(ctx, dirty) {
-    			if (dirty & /*_chats*/ 8 && img.src !== (img_src_value = /*chat*/ ctx[27].sender.avatar)) {
+    			if (dirty[0] & /*_chats*/ 8 && img.src !== (img_src_value = /*chat*/ ctx[28].sender.avatar)) {
     				attr_dev(img, "src", img_src_value);
     			}
     		},
@@ -16252,17 +15782,17 @@ var app = (function () {
     		block,
     		id: create_if_block_5.name,
     		type: "if",
-    		source: "(366:14) {#if chat.sender_type_text === 'user'}",
+    		source: "(376:14) {#if chat.sender_type_text === 'user'}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (371:14) {#if chat.type == 1}
+    // (381:14) {#if chat.type == 1}
     function create_if_block_4(ctx) {
     	let div;
-    	let t_value = /*chat*/ ctx[27].content + "";
+    	let t_value = /*chat*/ ctx[28].content + "";
     	let t;
 
     	const block = {
@@ -16270,18 +15800,18 @@ var app = (function () {
     			div = element("div");
     			t = text(t_value);
     			attr_dev(div, "class", "msg svelte-4opjxd");
-    			set_style(div, "background-color", /*chat*/ ctx[27].user !== /*$user*/ ctx[12] && toHSL(/*chat*/ ctx[27].user));
-    			add_location(div, file$6, 371, 16, 11026);
+    			set_style(div, "background-color", /*chat*/ ctx[28].user !== /*$user*/ ctx[12] && toHSL(/*chat*/ ctx[28].user));
+    			add_location(div, file$6, 381, 16, 11185);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
     			append_dev(div, t);
     		},
     		p: function update(ctx, dirty) {
-    			if (dirty & /*_chats*/ 8 && t_value !== (t_value = /*chat*/ ctx[27].content + "")) set_data_dev(t, t_value);
+    			if (dirty[0] & /*_chats*/ 8 && t_value !== (t_value = /*chat*/ ctx[28].content + "")) set_data_dev(t, t_value);
 
-    			if (dirty & /*_chats, $user*/ 4104) {
-    				set_style(div, "background-color", /*chat*/ ctx[27].user !== /*$user*/ ctx[12] && toHSL(/*chat*/ ctx[27].user));
+    			if (dirty[0] & /*_chats, $user*/ 4104) {
+    				set_style(div, "background-color", /*chat*/ ctx[28].user !== /*$user*/ ctx[12] && toHSL(/*chat*/ ctx[28].user));
     			}
     		},
     		d: function destroy(detaching) {
@@ -16293,14 +15823,14 @@ var app = (function () {
     		block,
     		id: create_if_block_4.name,
     		type: "if",
-    		source: "(371:14) {#if chat.type == 1}",
+    		source: "(381:14) {#if chat.type == 1}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (378:14) {#if chat.type == 2}
+    // (388:14) {#if chat.type == 2}
     function create_if_block_3(ctx) {
     	let img;
     	let img_src_value;
@@ -16308,16 +15838,16 @@ var app = (function () {
     	const block = {
     		c: function create() {
     			img = element("img");
-    			if (img.src !== (img_src_value = /*chat*/ ctx[27].content)) attr_dev(img, "src", img_src_value);
+    			if (img.src !== (img_src_value = /*chat*/ ctx[28].content)) attr_dev(img, "src", img_src_value);
     			attr_dev(img, "class", "msg msg-image svelte-4opjxd");
     			attr_dev(img, "alt", "");
-    			add_location(img, file$6, 378, 16, 11275);
+    			add_location(img, file$6, 388, 16, 11434);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, img, anchor);
     		},
     		p: function update(ctx, dirty) {
-    			if (dirty & /*_chats*/ 8 && img.src !== (img_src_value = /*chat*/ ctx[27].content)) {
+    			if (dirty[0] & /*_chats*/ 8 && img.src !== (img_src_value = /*chat*/ ctx[28].content)) {
     				attr_dev(img, "src", img_src_value);
     			}
     		},
@@ -16330,14 +15860,14 @@ var app = (function () {
     		block,
     		id: create_if_block_3.name,
     		type: "if",
-    		source: "(378:14) {#if chat.type == 2}",
+    		source: "(388:14) {#if chat.type == 2}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (352:6) {#each _chats as chat (chat.id)}
+    // (362:6) {#each _chats as chat (chat.id)}
     function create_each_block(key_1, ctx) {
     	let article;
     	let div2;
@@ -16346,10 +15876,10 @@ var app = (function () {
     	let div1;
     	let t1;
     	let t2;
-    	let if_block0 = /*chat*/ ctx[27].sender_type_text === "user" && create_if_block_6(ctx);
-    	let if_block1 = /*chat*/ ctx[27].sender_type_text === "user" && create_if_block_5(ctx);
-    	let if_block2 = /*chat*/ ctx[27].type == 1 && create_if_block_4(ctx);
-    	let if_block3 = /*chat*/ ctx[27].type == 2 && create_if_block_3(ctx);
+    	let if_block0 = /*chat*/ ctx[28].sender_type_text === "user" && create_if_block_6(ctx);
+    	let if_block1 = /*chat*/ ctx[28].sender_type_text === "user" && create_if_block_5(ctx);
+    	let if_block2 = /*chat*/ ctx[28].type == 1 && create_if_block_4(ctx);
+    	let if_block3 = /*chat*/ ctx[28].type == 2 && create_if_block_3(ctx);
 
     	const block = {
     		key: key_1,
@@ -16367,13 +15897,13 @@ var app = (function () {
     			t2 = space();
     			if (if_block3) if_block3.c();
     			attr_dev(div0, "class", "meta svelte-4opjxd");
-    			add_location(div0, file$6, 354, 12, 10434);
-    			add_location(div1, file$6, 364, 12, 10778);
+    			add_location(div0, file$6, 364, 12, 10593);
+    			add_location(div1, file$6, 374, 12, 10937);
     			attr_dev(div2, "class", "message-container svelte-4opjxd");
-    			add_location(div2, file$6, 353, 10, 10390);
+    			add_location(div2, file$6, 363, 10, 10549);
     			attr_dev(article, "class", "svelte-4opjxd");
-    			toggle_class(article, "visitor", /*chat*/ ctx[27].sender_type_text === "visitor");
-    			add_location(article, file$6, 352, 8, 10318);
+    			toggle_class(article, "visitor", /*chat*/ ctx[28].sender_type_text === "visitor");
+    			add_location(article, file$6, 362, 8, 10477);
     			this.first = article;
     		},
     		m: function mount(target, anchor) {
@@ -16390,7 +15920,7 @@ var app = (function () {
     			if (if_block3) if_block3.m(div1, null);
     		},
     		p: function update(ctx, dirty) {
-    			if (/*chat*/ ctx[27].sender_type_text === "user") {
+    			if (/*chat*/ ctx[28].sender_type_text === "user") {
     				if (if_block0) {
     					if_block0.p(ctx, dirty);
     				} else {
@@ -16403,7 +15933,7 @@ var app = (function () {
     				if_block0 = null;
     			}
 
-    			if (/*chat*/ ctx[27].sender_type_text === "user") {
+    			if (/*chat*/ ctx[28].sender_type_text === "user") {
     				if (if_block1) {
     					if_block1.p(ctx, dirty);
     				} else {
@@ -16416,7 +15946,7 @@ var app = (function () {
     				if_block1 = null;
     			}
 
-    			if (/*chat*/ ctx[27].type == 1) {
+    			if (/*chat*/ ctx[28].type == 1) {
     				if (if_block2) {
     					if_block2.p(ctx, dirty);
     				} else {
@@ -16429,7 +15959,7 @@ var app = (function () {
     				if_block2 = null;
     			}
 
-    			if (/*chat*/ ctx[27].type == 2) {
+    			if (/*chat*/ ctx[28].type == 2) {
     				if (if_block3) {
     					if_block3.p(ctx, dirty);
     				} else {
@@ -16442,8 +15972,8 @@ var app = (function () {
     				if_block3 = null;
     			}
 
-    			if (dirty & /*_chats*/ 8) {
-    				toggle_class(article, "visitor", /*chat*/ ctx[27].sender_type_text === "visitor");
+    			if (dirty[0] & /*_chats*/ 8) {
+    				toggle_class(article, "visitor", /*chat*/ ctx[28].sender_type_text === "visitor");
     			}
     		},
     		d: function destroy(detaching) {
@@ -16459,14 +15989,14 @@ var app = (function () {
     		block,
     		id: create_each_block.name,
     		type: "each",
-    		source: "(352:6) {#each _chats as chat (chat.id)}",
+    		source: "(362:6) {#each _chats as chat (chat.id)}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (386:6) {#if typing}
+    // (396:6) {#if typing}
     function create_if_block_2(ctx) {
     	let article;
     	let div4;
@@ -16524,59 +16054,59 @@ var app = (function () {
     			style = svg_element("style");
     			t3 = text("@keyframes bounce-8f{\n                  0% {\n                    animation-timing-function: cubic-bezier(0.1361,0.2514,0.2175,0.8786);\n                    transform: translate(0,0px) scaleY(1);\n                  }\n                  37% {\n                    animation-timing-function: cubic-bezier(0.7674,0.1844,0.8382,0.7157);\n                    transform: translate(0,-20px) scaleY(1);\n                  }\n                  72% {\n                    animation-timing-function: cubic-bezier(0.1118,0.2149,0.2172,0.941);\n                    transform: translate(0,0px) scaleY(1);\n                  }\n                  87% {\n                    animation-timing-function: cubic-bezier(0.7494,0.2259,0.8209,0.6963);\n                    transform: translate(0,10px) scaleY(0.602);\n                  }\n                  100% {\n                    transform: translate(0,0px) scaleY(1);\n                  }\n                }");
     			attr_dev(span, "class", "user svelte-1wx9mm9 svelte-4opjxd");
-    			add_location(span, file$6, 389, 12, 11590);
+    			add_location(span, file$6, 399, 12, 11749);
     			attr_dev(div0, "class", "meta svelte-1wx9mm9 svelte-4opjxd");
-    			add_location(div0, file$6, 388, 10, 11544);
+    			add_location(div0, file$6, 398, 10, 11703);
     			if (img.src !== (img_src_value = /*typingUser*/ ctx[11].avatar)) attr_dev(img, "src", img_src_value);
     			attr_dev(img, "alt", "");
     			attr_dev(img, "class", "svelte-1wx9mm9 svelte-4opjxd");
-    			add_location(img, file$6, 393, 14, 11744);
+    			add_location(img, file$6, 403, 14, 11903);
     			attr_dev(div1, "class", "avatar svelte-1wx9mm9 svelte-4opjxd");
-    			add_location(div1, file$6, 392, 12, 11694);
+    			add_location(div1, file$6, 402, 12, 11853);
     			attr_dev(circle0, "fill", "#666666");
     			attr_dev(circle0, "r", "10");
     			attr_dev(circle0, "cy", "50");
     			attr_dev(circle0, "cx", "20");
-    			add_location(circle0, file$6, 401, 24, 12524);
+    			add_location(circle0, file$6, 411, 24, 12683);
     			attr_dev(g0, "class", "ldl-ani");
     			set_style(g0, "transform-origin", "50px 50px");
     			set_style(g0, "transform", "matrix(1, 0, 0, 1, 0, 0)");
     			set_style(g0, "animation", "1.23457s linear -0.823045s infinite normal forwards running bounce-8f");
-    			add_location(g0, file$6, 400, 22, 12325);
+    			add_location(g0, file$6, 410, 22, 12484);
     			attr_dev(g1, "class", "ldl-layer");
-    			add_location(g1, file$6, 399, 20, 12281);
+    			add_location(g1, file$6, 409, 20, 12440);
     			attr_dev(circle1, "fill", "#999999");
     			attr_dev(circle1, "r", "10");
     			attr_dev(circle1, "cy", "50");
     			attr_dev(circle1, "cx", "50");
-    			add_location(circle1, file$6, 406, 24, 12894);
+    			add_location(circle1, file$6, 416, 24, 13053);
     			attr_dev(g2, "class", "ldl-ani");
     			set_style(g2, "transform-origin", "50px 50px");
     			set_style(g2, "transform", "matrix(1, 0, 0, 1, 0, 0)");
     			set_style(g2, "animation", "1.23457s linear -1.02881s infinite normal forwards running bounce-8f");
-    			add_location(g2, file$6, 405, 22, 12696);
+    			add_location(g2, file$6, 415, 22, 12855);
     			attr_dev(g3, "class", "ldl-layer");
-    			add_location(g3, file$6, 404, 20, 12652);
+    			add_location(g3, file$6, 414, 20, 12811);
     			attr_dev(circle2, "fill", "#cccccc");
     			attr_dev(circle2, "r", "10");
     			attr_dev(circle2, "cy", "50");
     			attr_dev(circle2, "cx", "80");
-    			add_location(circle2, file$6, 411, 24, 13264);
+    			add_location(circle2, file$6, 421, 24, 13423);
     			attr_dev(g4, "class", "ldl-ani");
     			set_style(g4, "transform-origin", "50px 50px");
     			set_style(g4, "transform", "matrix(1, 0, 0, 1, 0, 0)");
     			set_style(g4, "animation", "1.23457s linear -1.23457s infinite normal forwards running bounce-8f");
-    			add_location(g4, file$6, 410, 22, 13066);
+    			add_location(g4, file$6, 420, 22, 13225);
     			attr_dev(g5, "class", "ldl-layer");
-    			add_location(g5, file$6, 409, 20, 13022);
+    			add_location(g5, file$6, 419, 20, 13181);
     			attr_dev(g6, "class", "ldl-ani");
-    			add_location(g6, file$6, 398, 18, 12241);
+    			add_location(g6, file$6, 408, 18, 12400);
     			attr_dev(g7, "class", "ldl-scale");
     			set_style(g7, "transform-origin", "50% 50%");
     			set_style(g7, "transform", "rotate(0deg) scale(0.6, 0.6)");
-    			add_location(g7, file$6, 397, 16, 12125);
+    			add_location(g7, file$6, 407, 16, 12284);
     			attr_dev(style, "id", "bounce-8f");
-    			add_location(style, file$6, 416, 16, 13432);
+    			add_location(style, file$6, 426, 16, 13591);
     			attr_dev(svg, "xml:space", "preserve");
     			attr_dev(svg, "viewBox", "0 0 100 100");
     			attr_dev(svg, "y", "0");
@@ -16589,15 +16119,15 @@ var app = (function () {
     			set_style(svg, "background", "none");
     			set_style(svg, "shape-rendering", "auto");
     			set_style(svg, "margin", "-6px 0 -23px 0");
-    			add_location(svg, file$6, 396, 14, 11886);
+    			add_location(svg, file$6, 406, 14, 12045);
     			attr_dev(div2, "class", "msg svelte-4opjxd");
     			set_style(div2, "padding", "0");
-    			add_location(div2, file$6, 395, 12, 11835);
-    			add_location(div3, file$6, 391, 10, 11676);
+    			add_location(div2, file$6, 405, 12, 11994);
+    			add_location(div3, file$6, 401, 10, 11835);
     			attr_dev(div4, "class", "message-container svelte-1wx9mm9 svelte-4opjxd");
-    			add_location(div4, file$6, 387, 8, 11487);
+    			add_location(div4, file$6, 397, 8, 11646);
     			attr_dev(article, "class", "svelte-1wx9mm9 svelte-4opjxd");
-    			add_location(article, file$6, 386, 6, 11446);
+    			add_location(article, file$6, 396, 6, 11605);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, article, anchor);
@@ -16627,9 +16157,9 @@ var app = (function () {
     			append_dev(style, t3);
     		},
     		p: function update(ctx, dirty) {
-    			if (dirty & /*typingUser*/ 2048 && t0_value !== (t0_value = /*typingUser*/ ctx[11].name + "")) set_data_dev(t0, t0_value);
+    			if (dirty[0] & /*typingUser*/ 2048 && t0_value !== (t0_value = /*typingUser*/ ctx[11].name + "")) set_data_dev(t0, t0_value);
 
-    			if (dirty & /*typingUser*/ 2048 && img.src !== (img_src_value = /*typingUser*/ ctx[11].avatar)) {
+    			if (dirty[0] & /*typingUser*/ 2048 && img.src !== (img_src_value = /*typingUser*/ ctx[11].avatar)) {
     				attr_dev(img, "src", img_src_value);
     			}
     		},
@@ -16642,14 +16172,14 @@ var app = (function () {
     		block,
     		id: create_if_block_2.name,
     		type: "if",
-    		source: "(386:6) {#if typing}",
+    		source: "(396:6) {#if typing}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (460:4) {#if showScrollToBottom}
+    // (470:4) {#if showScrollToBottom}
     function create_if_block_1$2(ctx) {
     	let scrolltobottom;
     	let current;
@@ -16686,14 +16216,14 @@ var app = (function () {
     		block,
     		id: create_if_block_1$2.name,
     		type: "if",
-    		source: "(460:4) {#if showScrollToBottom}",
+    		source: "(470:4) {#if showScrollToBottom}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (324:0) <Page>
+    // (334:0) <Page>
     function create_default_slot(ctx) {
     	let if_block_anchor;
     	let current;
@@ -16714,7 +16244,7 @@ var app = (function () {
     				if (if_block) {
     					if_block.p(ctx, dirty);
 
-    					if (dirty & /*_data*/ 2) {
+    					if (dirty[0] & /*_data*/ 2) {
     						transition_in(if_block, 1);
     					}
     				} else {
@@ -16752,7 +16282,7 @@ var app = (function () {
     		block,
     		id: create_default_slot.name,
     		type: "slot",
-    		source: "(324:0) <Page>",
+    		source: "(334:0) <Page>",
     		ctx
     	});
 
@@ -16782,10 +16312,10 @@ var app = (function () {
     			mount_component(page, target, anchor);
     			current = true;
     		},
-    		p: function update(ctx, [dirty]) {
+    		p: function update(ctx, dirty) {
     			const page_changes = {};
 
-    			if (dirty & /*$$scope, showScrollToBottom, textareaClass, visitor, socket, init, _chats, main, typingUser, typing, $user, isLoading, _user, _data*/ 1073750015) {
+    			if (dirty[0] & /*showScrollToBottom, textareaClass, visitor, socket, init, _chats, main, typingUser, typing, $user, isLoading, _user, _data*/ 8191 | dirty[1] & /*$$scope*/ 1) {
     				page_changes.$$scope = { dirty, ctx };
     			}
 
@@ -16839,6 +16369,7 @@ var app = (function () {
     	let typing = false;
     	let typingUser = null;
     	let timeout;
+    	let channel;
     	let showMessages = 100; // initial messages to load
     	window.io = lib$1;
 
@@ -16868,10 +16399,18 @@ var app = (function () {
     		localStorage.setItem("conversation_id", conversation_id);
     		$$invalidate(1, _data = data);
 
+    		if (channel && reopen && echo && socket) {
+    			try {
+    				echo.leave(channel);
+    			} catch(e) {
+    				console.error(e);
+    			}
+    		}
+
     		if (conversation_id) {
     			setTimeout(
     				async () => {
-    					const channel = `conversation.${conversation_id}`; //startTyping()
+    					channel = `conversation.${conversation_id}`; //startTyping()
 
     					echo = new Echo({
     							broadcaster: "socket.io",
@@ -17057,6 +16596,7 @@ var app = (function () {
     		typing,
     		typingUser,
     		timeout,
+    		channel,
     		ADD_ON_SCROLL,
     		showMessages,
     		init,
@@ -17086,6 +16626,7 @@ var app = (function () {
     		if ("typing" in $$props) $$invalidate(10, typing = $$props.typing);
     		if ("typingUser" in $$props) $$invalidate(11, typingUser = $$props.typingUser);
     		if ("timeout" in $$props) timeout = $$props.timeout;
+    		if ("channel" in $$props) channel = $$props.channel;
     		if ("showMessages" in $$props) showMessages = $$props.showMessages;
     		if ("init" in $$props) $$invalidate(5, init = $$props.init);
     	};
@@ -17095,7 +16636,7 @@ var app = (function () {
     	}
 
     	$$self.$$.update = () => {
-    		if ($$self.$$.dirty & /*_chats, visitor, socket, textareaClass, init*/ 121) {
+    		if ($$self.$$.dirty[0] & /*_chats, visitor, socket, textareaClass, init*/ 121) {
     			 {
     				// debounce update svelte store to avoid overloading ui
     				timeout = setTimeout(
@@ -17141,14 +16682,22 @@ var app = (function () {
     	constructor(options) {
     		super(options);
 
-    		init(this, options, instance$6, create_fragment$6, safe_not_equal, {
-    			visitor: 0,
-    			_data: 1,
-    			_user: 2,
-    			_chats: 3,
-    			textareaClass: 4,
-    			init: 5
-    		});
+    		init(
+    			this,
+    			options,
+    			instance$6,
+    			create_fragment$6,
+    			safe_not_equal,
+    			{
+    				visitor: 0,
+    				_data: 1,
+    				_user: 2,
+    				_chats: 3,
+    				textareaClass: 4,
+    				init: 5
+    			},
+    			[-1, -1]
+    		);
 
     		dispatch_dev("SvelteRegisterComponent", {
     			component: this,
