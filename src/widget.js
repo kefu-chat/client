@@ -1,6 +1,10 @@
 let kefu = {
   chat: {
-    options: {},
+    options: {
+      api_origin: API_URL,
+      chat_origin: WIDGET_URL,
+      asset_origin: WIDGET_URL,
+    },
     iframe: null,
 
     initIframeDom: function () {
@@ -24,22 +28,6 @@ let kefu = {
     },
 
     init: function (conf) {
-      let _kefuchat_init = window._kefuchat_init;
-
-      if (_kefuchat_init && "function" == typeof _kefuchat_init) {
-        let diy = _kefuchat_init();
-        for (let i in diy) {
-          if (
-            diy[i] != null &&
-            "string" != typeof diy[i] &&
-            "number" != typeof diy[i]
-          ) {
-            throw i + " must a string";
-          }
-          conf[i] = diy[i];
-        }
-      }
-
       for (let j in conf) {
         kefu.chat.options[j] = conf[j];
       }
@@ -229,8 +217,9 @@ let kefu = {
       bindEvent();
     },
 
-    load: () => {
+    load: (config) => {
       let conf = {
+        api_origin: API_URL,
         chat_origin: WIDGET_URL,
         asset_origin: WIDGET_URL,
         userAgent: window.navigator.userAgent,
@@ -240,13 +229,39 @@ let kefu = {
         name: null,
         referer: window.document.referrer,
         unique_id: null,
+        theme: config.theme,
+        terminate_manual: config.terminate_manual,
+        terminate_timeout: config.terminate_timeout,
+        greeting_message: config.greeting_message,
       };
 
       kefu.chat.init(conf);
     },
 
+    start: () => {
+      let _kefuchat_init = window._kefuchat_init;
+      if (_kefuchat_init && "function" == typeof _kefuchat_init) {
+        let diy = _kefuchat_init();
+        for (let i in diy) {
+          if (
+            diy[i] != null &&
+            "string" != typeof diy[i] &&
+            "number" != typeof diy[i]
+          ) {
+            throw i + " must a string";
+          }
+          kefu.chat.options[i] = diy[i];
+        }
+      }
+
+      const js = document.createElement(`script`);
+      js.src = kefu.chat.options.api_origin + 'api/visitor/config/' + kefu.chat.options.institution_id + '?callback=kefu.chat.load&t=' + (new Date).toISOString();
+      document.body.append(js);
+    },
+
     update: (info) => {
       let conf = {
+        api_origin: API_URL,
         chat_origin: WIDGET_URL,
         asset_origin: WIDGET_URL,
         userAgent: window.navigator.userAgent,
@@ -372,6 +387,6 @@ let kefu = {
   },
 };
 
-kefu.chat.load();
+kefu.chat.start();
 kefu.chat.registerPushService();
 window.kefu = kefu;

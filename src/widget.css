@@ -85,9 +85,9 @@
   position: fixed;
   right: 90px;
   background: #fff;
-  bottom: 70px;
+  bottom: 65px;
   cursor: pointer;
-  box-shadow: 0 5px 20px rgb(33 37 41 / 55%);
+  box-shadow: 0 5px 20px rgb(33 37 41 / 22%);
   border-radius: 4px;
   padding: 24px 16px 16px;
 }
