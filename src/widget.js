@@ -105,10 +105,8 @@ let kefu = {
           chat.appendChild(kefu.chat.iframe);
           kefu.chat.iframe.className = "kefuchat-iframe";
         }
-        let iframe = kefu.chat.iframe;
         let kfdesc = createDiv("kefuchat-kfdesc");
         kfdesc.innerText = "客服在线, 来咨询吧";
-        //iframe.src = kefu.chat.options.chat_origin + '?institution_id=' + kefu.chat.options.institution_id + '&unique_id=' + kefu.chat.options.unique_id + '&userAgent=' + encodeURIComponent(kefu.chat.options.userAgent) + '&languages[]=' + kefu.chat.options.language + '&url=' + encodeURIComponent(kefu.chat.options.url) + '&name=' + encodeURIComponent(kefu.chat.options.name) + '&referer=' + encodeURIComponent(kefu.chat.options.referer);
 
         opener.style.display = "none";
         chat.style.display = "none";
@@ -116,6 +114,24 @@ let kefu = {
         opener.appendChild(kfdesc);
         opener.appendChild(logo);
         opener.appendChild(badge);
+
+        let greet = createDiv("kefuchat-greet");
+        let greetHead = createDiv("kefuchat-greet-head");
+        let greetAvatar = createDiv("kefuchat-greet-avatar");
+        let avatar = new Image();
+        avatar.className = 'avatar-img';
+        avatar.src = 'about:blank';
+        greetAvatar.appendChild(avatar);
+        greetHead.appendChild(greetAvatar);
+        greet.appendChild(greetHead);
+        let greetMessage = createDiv("kefuchat-greet-msg");
+        let greetMessageContent = document.createElement('p');
+        greetMessageContent.className = 'kefuchat-greet-msg-content';
+        greetMessageContent.innerText = '';
+        greetMessage.appendChild(greetMessageContent);
+        greet.appendChild(greetMessage);
+        greet.style.display = 'none';
+        container.appendChild(greet);
       };
 
       let installCss = () => {
@@ -139,6 +155,7 @@ let kefu = {
       window.openKefuchat = () => {
         askNotificationPermission().then(() => {});
         document.querySelector(".kefuchat-opener").style.display = "none";
+        document.querySelector(".kefuchat-greet").style.display = "none";
         document.querySelector(".kefuchat-chat").style.display = "block";
       };
 
@@ -152,6 +169,9 @@ let kefu = {
           .querySelector(".kefuchat-opener")
           .addEventListener("click", window.openKefuchat);
         document
+          .querySelector(".kefuchat-greet")
+          .addEventListener("click", window.openKefuchat);
+        document
           .querySelector(".kefuchat-close")
           .addEventListener("click", window.closeKefuchat);
       };
@@ -160,20 +180,24 @@ let kefu = {
         window.addEventListener(
           "message",
           (message) => {
-            console.log(message);
             if (message.data.action == "showNotification") {
+              let msg = message.data.msg;
+              let body, image;
+
+              if (msg.type == 1) {
+                body = msg.content;
+              }
+              if (msg.type == 2) {
+                body = "[图片消息]";
+                image = msg.content;
+              }
+
+              document.querySelector(".kefuchat-opener").style.display = "block";
+              document.querySelector('.kefuchat-greet-msg-content').innerText = body;
+              document.querySelector('.avatar-img').src = msg.sender.avatar;
+              document.querySelector(".kefuchat-greet").style.display = "block";
+
               askNotificationPermission().then(() => {
-                let msg = message.data.msg;
-                let body, image;
-
-                if (msg.type == 1) {
-                  body = msg.content;
-                }
-                if (msg.type == 2) {
-                  body = "[图片消息]";
-                  image = msg.content;
-                }
-
                 let notify = new Notification("您收到新消息", {
                   body,
                   image,

@@ -80,3 +80,41 @@
   border-top-left-radius: 10px;
   border-top-right-radius: 30px;
 }
+
+.kefuchat-greet {
+  width: 220px;
+  position: absolute;
+  right: 90px;
+  background: #fff;
+  bottom: 70px;
+  cursor: pointer;
+  box-shadow: 0 5px 20px rgba(0,0,0,.1);
+  border-radius: 4px;
+  padding: 24px 16px 16px;
+}
+
+.kefuchat-greet-msg-content {
+  font-size: 14px;
+  line-height: 22px;
+  margin: 0;
+}
+
+.kefuchat-greet-head img.avatar-img {
+  width: 60px;
+  height: 60px;
+  background: #fff;
+  border-radius: 30px;
+}
+
+.kefuchat-greet-head {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  margin-left: -30px;
+  margin-top: -30px;
+}
+
+.kefuchat-greet-msg {
+  padding: 10px 5px 5px;
+  color: #33475b;
+}
