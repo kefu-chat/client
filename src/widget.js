@@ -98,7 +98,9 @@ let kefu = {
         let opener = createDiv("kefuchat-opener theme-" + (kefu.chat.options.theme || 'default'));
         container.appendChild(opener);
 
-        let logo = createDiv("kefuchat-logo");
+        let logo = new Image;
+        logo.className = 'kefuchat-logo';
+        logo.src = kefu.chat.options.asset_origin + '/logo.svg';
         let badge = createDiv("kefuchat-badge");
         if (!kefu.chat.iframe) {
           kefu.chat.iframe = document.createElement("iframe");
@@ -120,7 +122,7 @@ let kefu = {
         let greetAvatar = createDiv("kefuchat-greet-avatar");
         let avatar = new Image();
         avatar.className = 'avatar-img';
-        avatar.src = 'about:blank';
+        avatar.src = 'data:image/svg+xml,%3Csvg%3E%3C/svg%3E';
         greetAvatar.appendChild(avatar);
         greetHead.appendChild(greetAvatar);
         greet.appendChild(greetHead);
@@ -153,7 +155,7 @@ let kefu = {
       };
 
       window.openKefuchat = () => {
-        askNotificationPermission().then(() => {});
+        askNotificationPermission().then(() => { });
         document.querySelector(".kefuchat-opener").style.display = "none";
         document.querySelector(".kefuchat-greet").style.display = "none";
         document.querySelector(".kefuchat-chat").style.display = "block";
@@ -358,7 +360,7 @@ let kefu = {
       }
     },
 
-    say: (msg) => {},
+    say: (msg) => { },
 
     open: (msg) => {
       window.openKefuchat();
