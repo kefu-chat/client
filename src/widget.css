@@ -83,12 +83,12 @@
 
 .kefuchat-greet {
   width: 220px;
-  position: absolute;
+  position: fixed;
   right: 90px;
   background: #fff;
   bottom: 70px;
   cursor: pointer;
-  box-shadow: 0 5px 20px rgba(0,0,0,.1);
+  box-shadow: 0 5px 20px rgb(33 37 41 / 55%);
   border-radius: 4px;
   padding: 24px 16px 16px;
 }
