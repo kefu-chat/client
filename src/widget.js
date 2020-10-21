@@ -147,6 +147,18 @@ let kefu = {
         document.querySelector(".kefuchat-opener").style.display = "none";
         document.querySelector(".kefuchat-greet").style.display = "none";
         document.querySelector(".kefuchat-chat").style.display = "block";
+
+        let msg = {
+          content: kefu.chat.options.greeting_message,
+          type: 1,
+          sender: kefu.chat.options.greeter,
+          sender_type_text: 'user',
+          sender_type: 'App\\Models\\User',
+          sender_id: kefu.chat.options.greeter.id,
+          created_at: (new Date()).toISOString(),
+          updated_at: (new Date()).toISOString(),
+        };
+        kefu.chat.iframe.contentWindow.postMessage({ action: 'autoGreet', msg: msg});
       };
 
       window.closeKefuchat = () => {
@@ -233,6 +245,7 @@ let kefu = {
         terminate_manual: config.terminate_manual,
         terminate_timeout: config.terminate_timeout,
         greeting_message: config.greeting_message,
+        greeter: config.greeter,
       };
 
       kefu.chat.init(conf);

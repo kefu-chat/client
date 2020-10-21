@@ -36,10 +36,28 @@
   let channel;
   const ADD_ON_SCROLL = 50; // messages to add when scrolling to the top
   let showMessages = 100; // initial messages to load
+  export const messageNotifyAudio = new Audio(document.parameters.asset_origin + 'music/dong.mp3');
 
   window.io = io;
 
-  export let init = async function(reopen = false) {
+  export const messageProcess = ({data}) => {
+    console.log(data)
+    if (data.action == 'autoGreet') {
+      messageNotifyAudio.play();
+      return _chats.push(data.msg);
+    }
+  };
+
+
+  export const messageProcessInit = ({data}) => {
+    setTimeout(() => {
+      messageProcess({data});
+    }, 3000);
+  };
+
+  export const init = async function(reopen = false) {
+    window.addEventListener('message', messageProcessInit);
+
     // $nav = "messages";
     const { data } = await request({
       url: `api/visitor/init`,
@@ -98,6 +116,10 @@
           textareaClass = '';
         }
 
+        window.removeEventListener('message', messageProcessInit);
+        window.removeEventListener('message', messageProcess);
+        window.addEventListener('message', messageProcess)
+
         socket = echo
           .join(channel)
           //.here()
@@ -107,12 +129,14 @@
             textareaClass = 'disabled';
             _chats.push(msg);
             if (msg.sender_type_text == "user") {
+              messageNotifyAudio.play();
               window.parent.postMessage({action: 'showNotification', msg})
             }
           })
           .listenForWhisper("message", (msg) => {
             _chats.push(msg);
             if (msg.sender_type_text == "user") {
+              messageNotifyAudio.play();
               window.parent.postMessage({action: 'showNotification', msg})
             }
           })
