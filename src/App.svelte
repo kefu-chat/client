@@ -40,24 +40,13 @@
 
   window.io = io;
 
-  export const messageProcess = ({data}) => {
-    console.log(data)
+  window.messageProcess = ({data}) => {
     if (data.action == 'autoGreet') {
       messageNotifyAudio.play();
       return _chats.push(data.msg);
     }
   };
-
-
-  export const messageProcessInit = ({data}) => {
-    setTimeout(() => {
-      messageProcess({data});
-    }, 3000);
-  };
-
   export const init = async function(reopen = false) {
-    window.addEventListener('message', messageProcessInit);
-
     // $nav = "messages";
     const { data } = await request({
       url: `api/visitor/init`,
@@ -116,9 +105,8 @@
           textareaClass = '';
         }
 
-        window.removeEventListener('message', messageProcessInit);
-        window.removeEventListener('message', messageProcess);
-        window.addEventListener('message', messageProcess)
+        window.removeEventListener('message', window.messageProcess);
+        window.addEventListener('message', window.messageProcess)
 
         socket = echo
           .join(channel)
@@ -127,6 +115,7 @@
           //.leaving((user) => {})
           .listen(".conversation.terminated", (msg) => {
             textareaClass = 'disabled';
+            msg.id = parseInt((Math.random() * 99999).toString());
             _chats.push(msg);
             if (msg.sender_type_text == "user") {
               messageNotifyAudio.play();
@@ -134,6 +123,7 @@
             }
           })
           .listenForWhisper("message", (msg) => {
+            msg.id = parseInt((Math.random() * 99999).toString());
             _chats.push(msg);
             if (msg.sender_type_text == "user") {
               messageNotifyAudio.play();
@@ -255,8 +245,8 @@
   .msg {
     display: inline-block;
     position: relative;
-    line-height: 1.8;
-    padding: 0.4em 1em;
+    line-height: 1.5;
+    padding: 0.5em 1em;
     background-color: #eee;
     border-radius: 11px;
 

@@ -1,5 +1,6 @@
 let kefu = {
   chat: {
+    opened: false,
     options: {
       api_origin: API_URL,
       chat_origin: WIDGET_URL,
@@ -159,11 +160,13 @@ let kefu = {
           updated_at: (new Date()).toISOString(),
         };
         kefu.chat.iframe.contentWindow.postMessage({ action: 'autoGreet', msg: msg});
+        kefu.chat.opened = true;
       };
 
       window.closeKefuchat = () => {
         document.querySelector(".kefuchat-chat").style.display = "none";
         document.querySelector(".kefuchat-opener").style.display = "block";
+        kefu.chat.opened = false;
       };
 
       let bindEvent = () => {
@@ -194,10 +197,12 @@ let kefu = {
                 image = msg.content;
               }
 
-              document.querySelector(".kefuchat-opener").style.display = "block";
-              document.querySelector('.kefuchat-greet-msg-content').innerText = body;
-              document.querySelector('.avatar-img').src = msg.sender.avatar;
-              document.querySelector(".kefuchat-greet").style.display = "block";
+              if (!kefu.chat.opened) {
+                document.querySelector(".kefuchat-opener").style.display = "block";
+                document.querySelector('.kefuchat-greet-msg-content').innerText = body;
+                document.querySelector('.avatar-img').src = msg.sender.avatar;
+                document.querySelector(".kefuchat-greet").style.display = "block";
+              }
 
               askNotificationPermission().then(() => {
                 let notify = new Notification("您收到新消息", {
