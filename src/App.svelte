@@ -127,6 +127,7 @@
             _chats.push(msg);
             if (msg.sender_type_text == "user") {
               messageNotifyAudio.play();
+              _user = msg.sender;
               window.parent.postMessage({action: 'showNotification', msg})
             }
           })
@@ -350,7 +351,7 @@
     <Nav>
       <div class="assistant-info">
         {#if _user}
-          <div class="assistant-avatar" />
+          <div class="assistant-avatar" style="background-image: url({_user.avatar})"/>
           <div class="assistant-text">
             <div class="text-white text-size-15">{_user.name}</div>
             {#if _user.title && _user.title.trim()}
