@@ -45,6 +45,19 @@
       messageNotifyAudio.play();
       return _chats.push(data.msg);
     }
+    if (data.action == 'uninstall') {
+      if (channel && echo && socket) {
+        try {
+          echo.leave(channel);
+        } catch (e) {
+          console.error(e);
+        }
+      }
+      _chats = [];
+      localStorage.removeItem("visitor_token");
+      localStorage.removeItem("conversation_id");
+      return;
+    }
   };
   export const init = async function(reopen = false) {
     // $nav = "messages";

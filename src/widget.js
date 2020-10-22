@@ -277,6 +277,10 @@ let kefu = {
       document.body.append(js);
     },
 
+    destroy: () => {
+      kefu.chat.iframe.contentWindow.postMessage({action: 'uninstall'});
+    },
+
     update: (info) => {
       let conf = {
         api_origin: API_URL,
@@ -294,6 +298,7 @@ let kefu = {
         conf[i] = info[i];
       }
 
+      kefu.chat.destroy();
       kefu.chat.init(conf);
     },
 
