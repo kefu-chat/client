@@ -36,11 +36,15 @@
   let channel;
   const ADD_ON_SCROLL = 50; // messages to add when scrolling to the top
   let showMessages = 100; // initial messages to load
+  let queue = [];
   export const messageNotifyAudio = new Audio(document.parameters.asset_origin + 'music/dong.mp3');
 
   window.io = io;
 
   window.messageProcess = ({data}) => {
+    if (!socket) {
+      queue.push({data});
+    }
     if (data.action == 'autoGreet') {
       messageNotifyAudio.play();
       return _chats.push(data.msg);
@@ -60,6 +64,9 @@
     }
   };
   export const init = async function(reopen = false) {
+    window.removeEventListener('message', window.messageProcess);
+    window.addEventListener('message', window.messageProcess)
+
     // $nav = "messages";
     const { data } = await request({
       url: `api/visitor/init`,
@@ -118,9 +125,6 @@
           textareaClass = '';
         }
 
-        window.removeEventListener('message', window.messageProcess);
-        window.addEventListener('message', window.messageProcess)
-
         socket = echo
           .join(channel)
           //.here()
@@ -151,6 +155,12 @@
           .listenForWhisper('stopTyping', (evt) => {
             typing = false;
           });
+
+          for (let index = 0; index < queue.length; index++) {
+            const msg = queue[index];
+            window.messageProcess(msg);
+          }
+          queue = [];
 
         //startTyping()
       }, 1000);
