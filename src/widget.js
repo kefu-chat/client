@@ -411,5 +411,5 @@ let kefu = {
 };
 
 kefu.chat.start();
-kefu.chat.registerPushService();
+// kefu.chat.registerPushService();
 window.kefu = kefu;
