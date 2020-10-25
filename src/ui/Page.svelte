@@ -21,5 +21,9 @@
     flex-direction: column;
     max-width: 640px;
     background-color: white;
+    border-top-right-radius: 30px;
+    border-top-left-radius: 10px;
+    overflow: hidden;
   }
+
 </style>
