@@ -41,12 +41,14 @@
 
   window.io = io;
 
-  window.messageProcess = ({data}) => {
+  window.messageProcess = ({data, silent}) => {
     if (!socket) {
       queue.push({data});
     }
     if (data.action == 'autoGreet') {
-      messageNotifyAudio.play();
+      if ('undefined' == typeof data.silent || !data.silent) {
+        messageNotifyAudio.play();
+      }
       return _chats.push(data.msg);
     }
     if (data.action == 'uninstall') {
@@ -158,6 +160,7 @@
 
           for (let index = 0; index < queue.length; index++) {
             const msg = queue[index];
+            msg.silent = true;
             window.messageProcess(msg);
           }
           queue = [];
