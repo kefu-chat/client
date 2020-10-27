@@ -150,6 +150,7 @@ let kefu = {
         document.querySelector(".kefuchat-chat").style.display = "block";
 
         let msg = {
+          id: parseInt((Math.random() * 99999).toString()).toString(),
           content: kefu.chat.options.greeting_message,
           type: 1,
           sender: kefu.chat.options.greeter,

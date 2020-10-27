@@ -81,6 +81,15 @@
     font-size: 14px;
     position: relative;
   }
+
+  .btn-reopen {
+    margin: 3px;
+    padding: 3px 6px;
+    background: rgb(0, 110, 255);
+    color: #fff;
+    cursor: pointer;
+    border-radius: 2px;
+  }
 </style>
 
 <div class="{textareaClass}">
@@ -106,6 +115,6 @@
     </form>
   {/if}
   {#if textareaClass == 'disabled'}
-    <div class="tips">本次服务已结束, 若您仍有需要咨询的问题, 欢迎再次<span role="link" on:click={(e) => reinit()}>发起咨询</span>.</div>
+    <div class="tips">本次服务已结束, 若您仍有需要咨询的问题, 欢迎再次<span class="btn-reopen" role="link" on:click={(e) => reinit()}>发起咨询</span></div>
   {/if}
 </div>
