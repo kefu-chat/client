@@ -72,7 +72,7 @@
   }
 
   @media (max-width: 768px) {
-    .nav .dot {
+    nav .dot {
       display: none;
       background: none;
     }
