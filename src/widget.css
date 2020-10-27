@@ -165,4 +165,10 @@
   .kefuchat-opener .kefuchat-badge {
     display: none;
   }
+  .kefuchat-greet {
+    width: 80vw;
+    left: 6vw;
+    top: calc(100vh - 160px);
+    height: 40px;
+  }
 }
