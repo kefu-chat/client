@@ -25,5 +25,10 @@
     border-top-left-radius: 10px;
     overflow: hidden;
   }
-
+  @media (max-width: 768px) {
+    .container {
+      border-top-right-radius: 0;
+      border-top-left-radius: 0;
+    }
+  }
 </style>

@@ -118,3 +118,51 @@
   padding: 10px 5px 5px;
   color: #33475b;
 }
+
+@media (max-width: 768px) {
+  .kefuchat-opener {
+    width: 100vw;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    height: 60px;
+    top: calc(100vh - 60px);
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    position: fixed;
+  }
+
+  .kefuchat-opener .kefuchat-kfdesc {
+    padding: 20px 18px;
+  }
+
+  .kefuchat-opener .kefuchat-logo {
+    top: 22px;
+    right: 20px;
+  }
+
+  .kefuchat-chat {
+    width: 100vw;
+    right: 0;
+    height: 100vh;
+    top: 0;
+    position: fixed;
+    left: 0;
+    bottom: 0;
+  }
+  .kefuchat-chat .kefuchat-close {
+    right: 0;
+    position: absolute;
+    z-index: 2;
+    margin-top: 5px;
+  }
+  .kefuchat-iframe {
+    width: 100%;
+    height: 100%;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+  }
+  .kefuchat-opener .kefuchat-badge {
+    display: none;
+  }
+}

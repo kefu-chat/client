@@ -70,4 +70,11 @@
     margin: 0 0 0 -1em;
     font-size: 0.8em;
   }
+
+  @media (max-width: 768px) {
+    .nav .dot {
+      display: none;
+      background: none;
+    }
+  }
 </style>
