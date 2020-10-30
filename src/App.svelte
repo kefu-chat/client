@@ -165,8 +165,7 @@
           }
           queue = [];
 
-        socket.whisper('online', {
-        })
+        socket.whisper('online', {});
 
         //startTyping()
       }, 1000);
