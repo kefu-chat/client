@@ -1,6 +1,7 @@
 let kefu = {
   chat: {
     opened: false,
+    greet: false,
     options: {
       api_origin: API_URL,
       chat_origin: WIDGET_URL,
@@ -144,23 +145,26 @@ let kefu = {
       };
 
       window.openKefuchat = () => {
-        askNotificationPermission().then(() => { });
         document.querySelector(".kefuchat-opener").style.display = "none";
         document.querySelector(".kefuchat-greet").style.display = "none";
         document.querySelector(".kefuchat-chat").style.display = "block";
 
-        let msg = {
-          id: parseInt((Math.random() * 99999).toString()).toString(),
-          content: kefu.chat.options.greeting_message,
-          type: 1,
-          sender: kefu.chat.options.greeter,
-          sender_type_text: 'user',
-          sender_type: 'App\\Models\\User',
-          sender_id: kefu.chat.options.greeter.id,
-          created_at: (new Date()).toISOString(),
-          updated_at: (new Date()).toISOString(),
-        };
-        kefu.chat.iframe.contentWindow.postMessage({ action: 'autoGreet', msg: msg});
+        if (!kefu.chat.options.greet) {
+          let msg = {
+            id: parseInt((Math.random() * 99999).toString()).toString(),
+            content: kefu.chat.options.greeting_message,
+            type: 1,
+            sender: kefu.chat.options.greeter,
+            sender_type_text: 'user',
+            sender_type: 'App\\Models\\User',
+            sender_id: kefu.chat.options.greeter.id,
+            created_at: (new Date()).toISOString(),
+            updated_at: (new Date()).toISOString(),
+          };
+          kefu.chat.iframe.contentWindow.postMessage({ action: 'autoGreet', msg: msg});
+          kefu.chat.options.greet = true;
+          askNotificationPermission().then(() => { });
+        }
         kefu.chat.opened = true;
       };
 
