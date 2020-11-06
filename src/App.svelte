@@ -1,5 +1,5 @@
 <script>
-  import io from 'socket.io-client';
+  import Pusher from 'pusher-js';
   import Nav from "./ui/Nav.svelte";
   import Page from "./ui/Page.svelte";
   import request from "./request";
@@ -38,8 +38,6 @@
   let showMessages = 100; // initial messages to load
   let queue = [];
   export const messageNotifyAudio = new Audio(document.parameters.asset_origin + 'music/dong.mp3');
-
-  window.io = io;
 
   window.messageProcess = ({data, silent}) => {
     if (!socket) {
@@ -106,13 +104,26 @@
         channel = `conversation.${conversation_id}`;
 
         echo = new Echo({
-          broadcaster: "socket.io",
-          host: SOCKET_HOST,
-          auth: {
-            headers: {
-              Authorization: `Bearer ${visitor_token}`,
+          broadcaster: "pusher",
+          client: new Pusher(`test`, {
+            auth: {
+              headers: {
+                Authorization: `Bearer ${visitor_token}`,
+              },
             },
-          },
+            authEndpoint: API_URL + "broadcasting/auth",
+            httpHost: new URL(API_URL).hostname,
+            httpPort: parseInt(new URL(API_URL).port, 10),
+            httpsPort: parseInt(new URL(API_URL).port, 10),
+            wsHost: new URL(SOCKET_HOST).hostname,
+            wsPort: parseInt(new URL(SOCKET_HOST).port, 10),
+            wssPort: parseInt(new URL(SOCKET_HOST).port, 10),
+            disableStats: true,
+            forceTLS: new URL(SOCKET_HOST).protocol == "https:",
+            enabledTransports: [
+              new URL(SOCKET_HOST).protocol == "https:" ? "wss" : "ws",
+            ],
+          }),
         });
 
         const { data } = await request({
