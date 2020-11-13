@@ -10,8 +10,6 @@ let kefu = {
     iframe: null,
 
     initIframeDom: function () {
-      let script = document.createElement("script");
-      script.src = kefu.chat.options.asset_origin + "bundle.js";
       kefu.chat.iframe.contentDocument.head.innerHTML = [
         '<meta charset="utf-8" />',
         '<meta name="viewport" content="width=device-width,initial-scale=1" />',
@@ -26,6 +24,13 @@ let kefu = {
         "</div>",
       ].join("");
       kefu.chat.iframe.contentDocument.parameters = kefu.chat.options;
+
+      let pusherjs = document.createElement("script");
+      pusherjs.src = kefu.chat.options.asset_origin + "pusher.js";
+      kefu.chat.iframe.contentDocument.body.appendChild(pusherjs);
+
+      let script = document.createElement("script");
+      script.src = kefu.chat.options.asset_origin + "bundle.js";
       kefu.chat.iframe.contentDocument.body.appendChild(script);
     },
 
