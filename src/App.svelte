@@ -1,5 +1,5 @@
 <script>
-  import Pusher from 'pusher-js';
+  const Pusher = require('pusher-js');
   import Nav from "./ui/Nav.svelte";
   import Page from "./ui/Page.svelte";
   import request from "./request";

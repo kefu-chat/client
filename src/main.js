@@ -1,5 +1,4 @@
 import App from "./App.svelte";
-import Pusher from 'pusher-js';
 
 document.body.innerHTML = "";
 
