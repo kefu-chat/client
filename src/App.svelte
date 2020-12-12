@@ -1,5 +1,4 @@
 <script>
-  import Pusher from 'pusher-js';
   import Nav from "./ui/Nav.svelte";
   import Page from "./ui/Page.svelte";
   import request from "./request";
@@ -16,6 +15,7 @@
   import { crossfade } from "svelte/transition";
   import { toHSL } from "./toHSL.js";
   import format from "date-fns/format";
+  import io from "socket.io-client";
 
   export let visitor = null;
   export let _data = null;
@@ -104,26 +104,14 @@
         channel = `conversation.${conversation_id}`;
 
         echo = new Echo({
-          broadcaster: "pusher",
-          client: new Pusher(`test`, {
-            auth: {
-              headers: {
-                Authorization: `Bearer ${visitor_token}`,
-              },
+          client: io,
+          broadcaster: "socket.io",
+          host: SOCKET_HOST,
+          auth: {
+            headers: {
+              Authorization: `Bearer ${visitor_token}`,
             },
-            authEndpoint: API_URL + "broadcasting/auth",
-            httpHost: new URL(API_URL).hostname,
-            httpPort: parseInt(new URL(API_URL).port, 10),
-            httpsPort: parseInt(new URL(API_URL).port, 10),
-            wsHost: new URL(SOCKET_HOST).hostname,
-            wsPort: parseInt(new URL(SOCKET_HOST).port, 10),
-            wssPort: parseInt(new URL(SOCKET_HOST).port, 10),
-            disableStats: true,
-            forceTLS: new URL(SOCKET_HOST).protocol == "https:",
-            enabledTransports: [
-              new URL(SOCKET_HOST).protocol == "https:" ? "wss" : "ws",
-            ],
-          }),
+          },
         });
 
         const { data } = await request({

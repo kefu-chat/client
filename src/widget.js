@@ -25,9 +25,9 @@ let kefu = {
       ].join("");
       kefu.chat.iframe.contentDocument.parameters = kefu.chat.options;
 
-      let pusherjs = document.createElement("script");
-      pusherjs.src = kefu.chat.options.asset_origin + "pusher.js";
-      kefu.chat.iframe.contentDocument.body.appendChild(pusherjs);
+      //let pusherjs = document.createElement("script");
+      //pusherjs.src = kefu.chat.options.asset_origin + "pusher.js";
+      //kefu.chat.iframe.contentDocument.body.appendChild(pusherjs);
 
       let script = document.createElement("script");
       script.src = kefu.chat.options.asset_origin + "bundle.js";
